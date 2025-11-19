@@ -40,8 +40,6 @@ export class ChatSession extends OpenAPIRoute {
 
   async handle(c: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>()
-    // const { sessionId } = c.req.valid("param");
-    // const { prompt } = c.req.valid("json");
 
     if (c.env.RATE_LIMITER) {
       const ip = c.req.header("CF-Connecting-IP") || "unknown";

@@ -1,4 +1,4 @@
-import type { Env } from "./index"
+import type { Env } from "./types"
 import type {
   NodeState,
   RaftClusterState,
