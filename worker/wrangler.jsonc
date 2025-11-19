@@ -26,8 +26,18 @@
 	],
 	"ai": {
 		"binding": "AI"
-	}
-	/**
+	},
+	"ratelimits": [
+		{
+			"name": "RATE_LIMITER",
+			"namespace_id": "1000",
+			"simple": {
+				"limit": 10,
+				"period": 60
+			}
+		}
+	]
+  	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */
