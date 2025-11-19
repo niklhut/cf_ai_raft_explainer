@@ -1,0 +1,12 @@
+{
+  "name": "@raft-simulator/shared",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "niklhut",
+  "packageManager": "pnpm@10.13.1"
+}

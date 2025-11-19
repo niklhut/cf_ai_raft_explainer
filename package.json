@@ -1,0 +1,5 @@
+{
+  "name": "raft-simulator",
+  "author": "niklhut",
+  "packageManager": "pnpm@10.13.1"
+}
