@@ -24,6 +24,9 @@ importers:
 
   worker:
     dependencies:
+      '@raft-simulator/shared':
+        specifier: workspace:^0.0.1
+        version: link:../shared
       chanfana:
         specifier: ^2.6.3
         version: 2.8.3
