@@ -97,7 +97,7 @@ export class RaftCluster {
         if (command.nodeId) this.recoverNode(command.nodeId)
         break
       case "SET_KEY":
-        if (command.key && command.value)
+        if (command.key)
           this.setKey(command.key, command.value)
         break
       case "NO_OP":

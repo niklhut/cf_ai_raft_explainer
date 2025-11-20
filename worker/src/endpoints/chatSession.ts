@@ -60,7 +60,7 @@ export class ChatSession extends OpenAPIRoute {
     //       - FAIL_LEADER: "fail leader", "kill leader"
     //       - FAIL_NODE: "fail node 2" (requires nodeId)
     //       - RECOVER_NODE: "recover node 2" (requires nodeId)
-    //       - SET_KEY: "set x to 10" (requires key, value)
+    //       - SET_KEY: "set x to 10" (requires key, value, or just key to unset)
     //       - NO_OP: General chat or invalid commands.
 
     //       Output JSON ONLY:
