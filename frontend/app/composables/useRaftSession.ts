@@ -110,7 +110,8 @@ export const useRaftSession = () => {
     ws.onopen = () => {
       console.log("WS Connected")
       error.value = null
-    if (reconnectInterval) {
+      isLoading.value = false
+      if (reconnectInterval) {
         clearInterval(reconnectInterval)
         reconnectInterval = null
       }
@@ -127,6 +128,7 @@ export const useRaftSession = () => {
 
     ws.onclose = () => {
       console.log("WS Closed")
+      isLoading.value = true
       // Reconnect logic
       if (!reconnectInterval) {
         reconnectInterval = setInterval(() => {

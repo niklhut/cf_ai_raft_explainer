@@ -20,8 +20,8 @@ onUnmounted(() => {
       <header class="h-14 border-b border-gray-200 dark:border-gray-800 flex items-center px-4 bg-white dark:bg-gray-900">
         <h1 class="text-lg font-semibold">Raft Consensus Simulator</h1>
         <div class="ml-auto flex items-center space-x-2">
-          <UBadge v-if="isLoading" color="yellow" variant="subtle">Syncing...</UBadge>
-          <UBadge v-else color="green" variant="subtle">Connected</UBadge>
+          <UBadge v-if="isLoading" color="warning" variant="subtle">Syncing...</UBadge>
+          <UBadge v-else color="success" variant="subtle">Connected</UBadge>
         </div>
       </header>
 
