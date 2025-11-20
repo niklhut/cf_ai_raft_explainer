@@ -1,13 +1,15 @@
 import type { RaftClusterState, ChatMessage } from "@raft-simulator/shared"
+import type { SavedSession } from "~/utils/types"
 
 export const useRaftSession = () => {
   const sessionId = useState<string | null>("sessionId", () => null)
-  const savedSessions = useState<string[]>("savedSessions", () => [])
+  const savedSessions = useState<SavedSession[]>("savedSessions", () => [])
   const clusterState = useState<RaftClusterState | null>(
     "clusterState",
     () => null,
   )
   const isLoading = useState<boolean>("isLoading", () => false)
+  const isConnected = useState<boolean>("isConnected", () => false)
   const error = useState<string | null>("error", () => null)
 
   const { get, post } = useApi()
@@ -31,8 +33,8 @@ export const useRaftSession = () => {
       if (import.meta.client) {
         localStorage.setItem("raft_session_id", res.sessionId)
 
-        if (!savedSessions.value.includes(res.sessionId)) {
-          savedSessions.value.push(res.sessionId)
+        if (!savedSessions.value.find(session => session.id === res.sessionId)) {
+          savedSessions.value.push({ id: res.sessionId, title: `Raft Simulation ${savedSessions.value.length + 1}` })
           localStorage.setItem(
             "raft_sessions",
             JSON.stringify(savedSessions.value),
@@ -61,7 +63,7 @@ export const useRaftSession = () => {
         sessionId.value = stored
         await fetchState()
       } else if (savedSessions.value.length > 0) {
-        sessionId.value = savedSessions.value[0]!
+        sessionId.value = savedSessions.value[0]!.id
         localStorage.setItem("raft_session_id", sessionId.value)
         await fetchState()
       } else {
@@ -110,7 +112,7 @@ export const useRaftSession = () => {
     ws.onopen = () => {
       console.log("WS Connected")
       error.value = null
-      isLoading.value = false
+      isConnected.value = true
       if (reconnectInterval) {
         clearInterval(reconnectInterval)
         reconnectInterval = null
@@ -128,7 +130,7 @@ export const useRaftSession = () => {
 
     ws.onclose = () => {
       console.log("WS Closed")
-      isLoading.value = true
+      isConnected.value = false
       // Reconnect logic
       if (!reconnectInterval) {
         reconnectInterval = setInterval(() => {
@@ -166,6 +168,7 @@ export const useRaftSession = () => {
     savedSessions,
     clusterState,
     isLoading,
+    isConnected,
     error,
     initSession,
     createSession,

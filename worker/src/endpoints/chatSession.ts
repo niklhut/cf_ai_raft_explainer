@@ -75,7 +75,7 @@ export class ChatSession extends OpenAPIRoute {
 
     const aiResponse = {
       response: JSON.stringify({
-        command: { type: "RECOVER_NODE", nodeId: 1 },
+        command: { type: "SET_KEY", nodeId: 1, key: "x", value: "10" },
         explanation:
           "This is a placeholder response SET_KEY. In a real implementation, the AI would interpret your command.",
       }),

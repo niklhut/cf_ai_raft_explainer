@@ -11,7 +11,6 @@ export interface ChatMessage {
 
 export interface RaftClusterState {
   nodes: NodeState[]
-  term: number
   keyValueStore: Record<string, string>
   chatHistory: ChatMessage[]
 }

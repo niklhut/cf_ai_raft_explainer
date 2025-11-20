@@ -16,15 +16,17 @@ export class RaftCluster {
       const stored = await this.state.storage.get<RaftClusterState>(
         "clusterState",
       )
+      const leaderId = Math.floor(Math.random() * 5) + 1
+      const nodes: NodeState[] = []
+      for (let i = 1; i <= 5; i++) {
+        nodes.push({
+          id: i,
+          role: i === leaderId ? "leader" : "follower",
+          term: 1,
+        })
+      }
       this.clusterState = stored || {
-        nodes: [
-          { id: 1, role: "leader", term: 1 },
-          { id: 2, role: "follower", term: 1 },
-          { id: 3, role: "follower", term: 1 },
-          { id: 4, role: "follower", term: 1 },
-          { id: 5, role: "follower", term: 1 },
-        ],
-        term: 1,
+        nodes: nodes,
         keyValueStore: {},
         chatHistory: [],
       }
@@ -181,9 +183,7 @@ export class RaftCluster {
   }
 
   private async recoverNode(nodeId: number) {
-    const clusterHasLeader = this.clusterState.nodes.some(
-      (n) => n.role === "leader",
-    )
+    const leader = this.clusterState.nodes.find((n) => n.role === "leader")
     const node = this.clusterState.nodes.find((n) => n.id === nodeId)
     if (node) {
       node.role = "follower"
@@ -191,8 +191,10 @@ export class RaftCluster {
 
       // Delay before checking for election
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      if (!clusterHasLeader) {
+      if (!leader) {
         await this.triggerElection()
+      } else {
+        node.term = leader.term
       }
     }
   }
@@ -201,7 +203,12 @@ export class RaftCluster {
     // In a real Raft, this would go through the log.
     // Here we just update the state if the leader is alive.
     const leader = this.clusterState.nodes.find((n) => n.role === "leader")
-    if (leader) {
+    const majorityAlive =
+      this.clusterState.nodes.filter((n) => n.role !== "dead").length >=
+      Math.ceil(this.clusterState.nodes.length / 2)
+    if (leader && majorityAlive) {
+      // Simulate delay for consensus
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       this.clusterState.keyValueStore[key] = value
     }
   }
@@ -210,11 +217,12 @@ export class RaftCluster {
     // Simplified election: Find a new leader among alive nodes
     const aliveNodes = this.clusterState.nodes.filter((n) => n.role !== "dead")
     if (aliveNodes.length > 0) {
-      this.clusterState.term += 1
-
       // Reset all to followers first (or candidates)
       this.clusterState.nodes.forEach((n) => {
-        if (n.role !== "dead") n.role = "candidate"
+        if (n.role !== "dead") {
+          n.role = "candidate"
+          n.term += 1
+        }
       })
       this.broadcastState()
 
@@ -231,8 +239,8 @@ export class RaftCluster {
       const newLeaderIndex = Math.floor(Math.random() * aliveNodes.length)
       const newLeader = aliveNodes[newLeaderIndex]
       this.clusterState.nodes.forEach((n) => {
-       if (n.role !== "dead") {
-           n.role = "follower"
+        if (n.role !== "dead") {
+          n.role = "follower"
         }
       })
       newLeader.role = "leader"

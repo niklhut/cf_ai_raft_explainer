@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { initSession, startPolling, stopPolling, clusterState, isLoading, error, sendMessage } = useRaftSession()
+const { initSession, startPolling, stopPolling, clusterState, isLoading, isConnected, error, sendMessage } = useRaftSession()
 
 onMounted(async () => {
   await initSession()
@@ -21,6 +21,7 @@ onUnmounted(() => {
         <h1 class="text-lg font-semibold">Raft Consensus Simulator</h1>
         <div class="ml-auto flex items-center space-x-2">
           <UBadge v-if="isLoading" color="warning" variant="subtle">Syncing...</UBadge>
+          <UBadge v-else-if="!isConnected" color="warning" variant="subtle">Connecting...</UBadge>
           <UBadge v-else color="success" variant="subtle">Connected</UBadge>
         </div>
       </header>
@@ -34,7 +35,7 @@ onUnmounted(() => {
           </div>
 
           <div v-if="clusterState">
-            <h2 class="text-xl font-bold mb-4">Cluster Visualization (Term: {{ clusterState.term }})</h2>
+            <h2 class="text-xl font-bold mb-4">Cluster Visualization (Term: {{ clusterState.nodes.find(n => n.role === 'leader')?.term }})</h2>
             <NodeVisualization :nodes="clusterState.nodes" />
             
             <div class="mt-8">
