@@ -1,6 +1,6 @@
-import { OpenAPIRoute } from "chanfana";
-import { z } from "zod";
-import type { AppContext } from "../types";
+import { OpenAPIRoute } from "chanfana"
+import { z } from "zod"
+import type { AppContext } from "../types"
 
 export class ChatSession extends OpenAPIRoute {
   schema = {
@@ -36,16 +36,16 @@ export class ChatSession extends OpenAPIRoute {
       "400": { description: "Missing session ID" },
       "429": { description: "Rate limit exceeded" },
     },
-  };
+  }
 
   async handle(c: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>()
 
     if (c.env.RATE_LIMITER) {
-      const ip = c.req.header("CF-Connecting-IP") || "unknown";
-      const { success } = await c.env.RATE_LIMITER.limit({ key: ip });
+      const ip = c.req.header("CF-Connecting-IP") || "unknown"
+      const { success } = await c.env.RATE_LIMITER.limit({ key: ip })
       if (!success) {
-        return c.text("Rate limit exceeded", 429);
+        return c.text("Rate limit exceeded", 429)
       }
     }
 
@@ -55,7 +55,7 @@ export class ChatSession extends OpenAPIRoute {
     //     {
     //       role: "system",
     //       content: `You are a Raft Consensus Algorithm simulator assistant. Interpret user commands into structured JSON.
-          
+
     //       Commands:
     //       - FAIL_LEADER: "fail leader", "kill leader"
     //       - FAIL_NODE: "fail node 2" (requires nodeId)
@@ -75,30 +75,33 @@ export class ChatSession extends OpenAPIRoute {
 
     const aiResponse = {
       response: JSON.stringify({
-        command: { type: "SET_KEY", key: "x", value: "10" },
+        command: { type: "RECOVER_NODE", nodeId: 1 },
         explanation:
           "This is a placeholder response SET_KEY. In a real implementation, the AI would interpret your command.",
       }),
     }
 
-    let parsedAi;
+    let parsedAi: {
+      command: { type: string; nodeId?: number; key?: string; value?: string }
+      explanation: string
+    }
     try {
       const cleanJson = (aiResponse as any).response
         .replace(/```json/g, "")
         .replace(/```/g, "")
-        .trim();
-      parsedAi = JSON.parse(cleanJson);
+        .trim()
+      parsedAi = JSON.parse(cleanJson)
     } catch (e) {
-      console.error("Failed to parse AI response", e);
+      console.error("Failed to parse AI response", e)
       parsedAi = {
         command: { type: "NO_OP" },
         explanation:
           "I couldn't understand that command, but I'm here to help with Raft!",
-      };
+      }
     }
 
-    const id = c.env.RAFT_CLUSTER.idFromString(data.params.sessionId);
-    const stub = c.env.RAFT_CLUSTER.get(id);
+    const id = c.env.RAFT_CLUSTER.idFromString(data.params.sessionId)
+    const stub = c.env.RAFT_CLUSTER.get(id)
 
     const doResponse = await stub.fetch("https://dummy/chat", {
       method: "POST",
@@ -108,9 +111,9 @@ export class ChatSession extends OpenAPIRoute {
         explanation: parsedAi.explanation,
       }),
       headers: { "Content-Type": "application/json" },
-    });
+    })
 
-    const responseData = await doResponse.json();
-    return c.json(responseData);
+    const responseData = await doResponse.json()
+    return c.json(responseData)
   }
 }
