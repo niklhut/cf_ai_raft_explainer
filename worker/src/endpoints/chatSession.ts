@@ -50,28 +50,36 @@ export class ChatSession extends OpenAPIRoute {
     }
 
     // Call Workers AI to interpret command
-    const aiResponse = await c.env.AI.run("@cf/meta/llama-3-8b-instruct", {
-      messages: [
-        {
-          role: "system",
-          content: `You are a Raft Consensus Algorithm simulator assistant. Interpret user commands into structured JSON.
+    // const aiResponse = await c.env.AI.run("@cf/meta/llama-3-8b-instruct", {
+    //   messages: [
+    //     {
+    //       role: "system",
+    //       content: `You are a Raft Consensus Algorithm simulator assistant. Interpret user commands into structured JSON.
           
-          Commands:
-          - FAIL_LEADER: "fail leader", "kill leader"
-          - FAIL_NODE: "fail node 2" (requires nodeId)
-          - RECOVER_NODE: "recover node 2" (requires nodeId)
-          - SET_KEY: "set x to 10" (requires key, value)
-          - NO_OP: General chat or invalid commands.
+    //       Commands:
+    //       - FAIL_LEADER: "fail leader", "kill leader"
+    //       - FAIL_NODE: "fail node 2" (requires nodeId)
+    //       - RECOVER_NODE: "recover node 2" (requires nodeId)
+    //       - SET_KEY: "set x to 10" (requires key, value)
+    //       - NO_OP: General chat or invalid commands.
 
-          Output JSON ONLY:
-          {
-            "command": { "type": "FAIL_LEADER" | "FAIL_NODE" | "RECOVER_NODE" | "SET_KEY" | "NO_OP", "nodeId": number, "key": string, "value": string },
-            "explanation": "Short explanation for the user."
-          }`,
-        },
-        { role: "user", content: data.body.prompt },
-      ],
-    });
+    //       Output JSON ONLY:
+    //       {
+    //         "command": { "type": "FAIL_LEADER" | "FAIL_NODE" | "RECOVER_NODE" | "SET_KEY" | "NO_OP", "nodeId": number, "key": string, "value": string },
+    //         "explanation": "Short explanation for the user."
+    //       }`,
+    //     },
+    //     { role: "user", content: data.body.prompt },
+    //   ],
+    // });
+
+    const aiResponse = {
+      response: JSON.stringify({
+        command: { type: "SET_KEY", key: "x", value: "10" },
+        explanation:
+          "This is a placeholder response SET_KEY. In a real implementation, the AI would interpret your command.",
+      }),
+    }
 
     let parsedAi;
     try {
