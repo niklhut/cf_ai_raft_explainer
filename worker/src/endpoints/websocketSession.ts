@@ -1,6 +1,6 @@
-import { OpenAPIRoute } from "chanfana";
-import { z } from "zod";
-import type { AppContext } from "../types";
+import { OpenAPIRoute } from "chanfana"
+import { z } from "zod"
+import type { AppContext } from "../types"
 
 export class WebsocketSession extends OpenAPIRoute {
   schema = {
@@ -10,6 +10,9 @@ export class WebsocketSession extends OpenAPIRoute {
       params: z.object({
         sessionId: z.string(),
       }),
+      headers: z.object({
+        Upgrade: z.string().optional(),
+      }),
     },
     responses: {
       "101": {
@@ -18,20 +21,21 @@ export class WebsocketSession extends OpenAPIRoute {
       "400": { description: "Missing session ID" },
       "426": { description: "Upgrade Required" },
     },
-  };
+  }
 
   async handle(c: AppContext) {
-    const { sessionId } = c.req.valid("param");
-    const upgradeHeader = c.req.header("Upgrade");
-
+    const data = await this.getValidatedData<typeof this.schema>()
+    const sessionId = data.params.sessionId
+    const upgradeHeader = data.headers.Upgrade?.toLowerCase()
 
     if (upgradeHeader !== "websocket") {
-      return c.text("Expected Upgrade: websocket", 426);
+      return c.text("Expected Upgrade: websocket", 426)
     }
 
-    const id = c.env.RAFT_CLUSTER.idFromString(sessionId);
-    const stub = c.env.RAFT_CLUSTER.get(id);
+    const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
+    const stub = c.env.RAFT_CLUSTER.get(id)
 
-    return stub.fetch(c.req.raw);
+    const doResponse = await stub.fetch("https://dummy/websocket", c.req.raw)
+    return doResponse
   }
 }

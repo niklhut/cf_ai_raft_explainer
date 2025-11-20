@@ -56,16 +56,25 @@ export class RaftCluster {
   }
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
-    // We can handle messages from client if needed, e.g. ping/pong
-    // For now, we just push state updates
+    if (typeof message === "string" && message === "ping") {
+      ws.send("pong")
+      return
+    }
   }
 
-  async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
-    // Handle close
+  async webSocketClose(
+    ws: WebSocket,
+    code: number,
+    reason: string,
+    wasClean: boolean,
+  ) {
+    console.log("WebSocket closed", { code, reason, wasClean })
+    ws.close(code, "Client closed connection")
   }
 
   async webSocketError(ws: WebSocket, error: unknown) {
-    // Handle error
+    console.error("WebSocket error", error)
+    ws.close(1011, "Internal error")
   }
 
   private broadcastState() {
@@ -74,7 +83,8 @@ export class RaftCluster {
       try {
         ws.send(data)
       } catch (e) {
-        // Handle broken connection
+        console.error("Error sending WebSocket message", e)
+        ws.close(1011, "Internal error")
       }
     }
   }
@@ -130,8 +140,7 @@ export class RaftCluster {
         if (command.nodeId) await this.recoverNode(command.nodeId)
         break
       case "SET_KEY":
-        if (command.key)
-          await this.setKey(command.key, command.value)
+        if (command.key) await this.setKey(command.key, command.value)
         break
       case "NO_OP":
       default:
@@ -147,11 +156,12 @@ export class RaftCluster {
     const leader = this.clusterState.nodes.find((n) => n.role === "leader")
     if (leader) {
       leader.alive = false
+      console.log(this.clusterState)
       this.broadcastState()
-      
+
       // Delay before election
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
       // Trigger election logic
       await this.triggerElection()
     }
@@ -163,7 +173,7 @@ export class RaftCluster {
       node.alive = false
       if (node.role === "leader") {
         this.broadcastState()
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
         await this.triggerElection()
       }
     }
@@ -191,19 +201,20 @@ export class RaftCluster {
     const aliveNodes = this.clusterState.nodes.filter((n) => n.alive)
     if (aliveNodes.length > 0) {
       this.clusterState.term += 1
-      
+
       // Reset all to followers first (or candidates)
-      this.clusterState.nodes.forEach(n => {
+      this.clusterState.nodes.forEach((n) => {
         if (n.alive) n.role = "candidate"
       })
       this.broadcastState()
-      
+
       // Election timeout simulation
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      await new Promise((resolve) => setTimeout(resolve, 1500))
 
       // Pick a random new leader
-      const newLeader = aliveNodes[Math.floor(Math.random() * aliveNodes.length)]
-      this.clusterState.nodes.forEach(n => {
+      const newLeader =
+        aliveNodes[Math.floor(Math.random() * aliveNodes.length)]
+      this.clusterState.nodes.forEach((n) => {
         if (n.alive) n.role = "follower"
       })
       newLeader.role = "leader"
