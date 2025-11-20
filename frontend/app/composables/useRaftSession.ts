@@ -76,11 +76,9 @@ export const useRaftSession = () => {
     if (!sessionId.value) return
     try {
       isLoading.value = true
-      const res = await post(`/chat/${sessionId.value}`, { prompt }) as { success: boolean, state: RaftClusterState }
-      console.log('Chat response:', res)
-      if (res.success) {
-        clusterState.value = res.state
-      }
+      // We still use POST for sending commands, but state updates come via WS
+      const res = await post(`/chat/${sessionId.value}`, { prompt }) as { success: boolean }
+      // No need to update clusterState here, WS will do it
     } catch (e) {
       error.value = 'Failed to send message'
       console.error(e)
@@ -89,16 +87,64 @@ export const useRaftSession = () => {
     }
   }
 
-  let pollInterval: any
+  let ws: WebSocket | null = null
+  let reconnectInterval: any
+
+  const connectWebSocket = () => {
+    if (!sessionId.value || !import.meta.client) return
+
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = 'localhost:8787' // In prod this should be dynamic
+    const wsUrl = `${protocol}//${host}/api/ws/${sessionId.value}`
+
+    ws = new WebSocket(wsUrl)
+
+    ws.onopen = () => {
+      console.log('WS Connected')
+      error.value = null
+    }
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as RaftClusterState
+        clusterState.value = data
+      } catch (e) {
+        console.error('Failed to parse WS message', e)
+      }
+    }
+
+    ws.onclose = () => {
+      console.log('WS Closed')
+      // Reconnect logic
+      if (!reconnectInterval) {
+        reconnectInterval = setInterval(() => {
+          console.log('Attempting reconnect...')
+          connectWebSocket()
+        }, 3000)
+      }
+    }
+
+    ws.onerror = (e) => {
+      console.error('WS Error', e)
+    }
+  }
+
   const startPolling = () => {
     if (import.meta.client) {
-      fetchState()
-      pollInterval = setInterval(fetchState, 2000)
+      fetchState() // Initial fetch
+      connectWebSocket()
     }
   }
 
   const stopPolling = () => {
-    if (pollInterval) clearInterval(pollInterval)
+    if (ws) {
+      ws.close()
+      ws = null
+    }
+    if (reconnectInterval) {
+      clearInterval(reconnectInterval)
+      reconnectInterval = null
+    }
   }
 
   return {

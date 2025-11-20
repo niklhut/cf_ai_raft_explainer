@@ -62,7 +62,11 @@ Thanks. Now please add a basic chat interface by using Nuxt and NuxtUI which pro
 * Shows all available chats in a sidebar and gives the option to create new chats
 ```
 
+Follow up:
 
+```md
+Thanks. Can we use a the durable object websocket hibernation api instead of polling the state continuously. This would also allow us to add small deleays to the command execution to e.g. show eveery node is a candidate after a leader failure before a new leader is elected. This, however, also requires the message handling in the durable object to be asyncrhounous from the chat response sending
+```
 
 Separate Chat: 
 
