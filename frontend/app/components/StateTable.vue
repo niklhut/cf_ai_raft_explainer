@@ -16,7 +16,7 @@ defineProps<{
     
     <UTable 
       v-else
-      :rows="Object.entries(data).map(([key, value]) => ({ key, value }))" 
+      :data="Object.entries(data).map(([key, value]) => ({ key, value }))"
     />
   </UCard>
 </template>
