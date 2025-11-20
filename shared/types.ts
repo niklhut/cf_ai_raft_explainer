@@ -1,8 +1,7 @@
 export interface NodeState {
   id: number
-  role: "leader" | "candidate" | "follower"
+  role: "leader" | "candidate" | "follower" | "dead"
   term: number
-  alive: boolean
 }
 
 export interface ChatMessage {
