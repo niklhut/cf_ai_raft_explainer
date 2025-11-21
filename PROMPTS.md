@@ -78,12 +78,18 @@ Follow up:
 
 ```md
 Thanks. Can we use the Vercel AI SDK with the cloudflare workers ai provider to allow for typesafety and streaming the final response to the client
-````
+```
 
 The previous command did not work since it could not figure out the correct workers ai provider package, so re-run with this prompt:
 
 ```md
 Thanks. Can we use the Vercel AI SDK with the cloudflare workers ai provider (pnpm add workers-ai-provider) to allow for typesafety and streaming the final response to the client.
+```
+
+Follow up:
+
+```md
+Thanks. Adjust the client to accept the streaming responses and display them accordingly.
 ```
 
 Separate Chat:

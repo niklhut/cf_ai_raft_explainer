@@ -4,6 +4,7 @@ import type { ChatMessage } from '@raft-simulator/shared'
 const props = defineProps<{
   history: ChatMessage[]
   loading: boolean
+  streamingMessage?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -20,7 +21,7 @@ const sendMessage = () => {
 }
 
 // Auto-scroll to bottom
-watch(() => props.history.length, async () => {
+watch(() => [props.history.length, props.streamingMessage], async () => {
   await nextTick()
   if (chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight
@@ -45,8 +46,15 @@ watch(() => props.history.length, async () => {
           <div>{{ msg.content }}</div>
         </div>
       </div>
+
+      <div v-if="streamingMessage" class="flex justify-start">
+        <div class="max-w-[80%] rounded-lg p-3 bg-gray-100 dark:bg-gray-800">
+          <div class="text-xs opacity-70 mb-1">Raft AI</div>
+          <div class="whitespace-pre-wrap">{{ streamingMessage }}</div>
+        </div>
+      </div>
       
-      <div v-if="loading" class="flex justify-start">
+      <div v-if="loading && !streamingMessage" class="flex justify-start">
         <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 flex items-center space-x-2">
           <UIcon name="i-heroicons-ellipsis-horizontal" class="animate-pulse" />
           <span class="text-sm text-gray-500">Thinking...</span>

@@ -11,6 +11,7 @@ export const useRaftSession = () => {
   const isLoading = useState<boolean>("isLoading", () => false)
   const isConnected = useState<boolean>("isConnected", () => false)
   const error = useState<string | null>("error", () => null)
+  const streamingMessage = useState<string | null>("streamingMessage", () => null)
 
   const { get, post } = useApi()
 
@@ -84,16 +85,51 @@ export const useRaftSession = () => {
     if (!sessionId.value) return
     try {
       isLoading.value = true
-      // We still use POST for sending commands, but state updates come via WS
-      const res = (await post(`/chat/${sessionId.value}`, { prompt })) as {
-        success: boolean
+      streamingMessage.value = ""
+      
+      const config = useRuntimeConfig()
+      const response = await fetch(`${config.public.apiBase}/chat/${sessionId.value}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prompt })
+      })
+
+      if (!response.ok) throw new Error("Failed to send message")
+
+      // Handle State Update from Header
+      const stateHeader = response.headers.get("X-Raft-State")
+      if (stateHeader && clusterState.value) {
+        const newState = JSON.parse(stateHeader)
+        clusterState.value.nodes = newState.nodes
+        clusterState.value.keyValueStore = newState.keyValueStore
+        clusterState.value.lastError = newState.lastError
       }
-      // No need to update clusterState here, WS will do it
+
+      // Handle Streaming Response
+      const reader = response.body?.getReader()
+      if (!reader) return
+
+      const decoder = new TextDecoder()
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        streamingMessage.value += decoder.decode(value, { stream: true })
+      }
+
+      // Manually update history locally to prevent flicker before WS update
+      if (clusterState.value && streamingMessage.value) {
+         clusterState.value.chatHistory.push({ role: "user", content: prompt })
+         clusterState.value.chatHistory.push({ role: "assistant", content: streamingMessage.value })
+      }
+
     } catch (e) {
       error.value = "Failed to send message"
       console.error(e)
     } finally {
       isLoading.value = false
+      streamingMessage.value = null
     }
   }
 
@@ -170,6 +206,7 @@ export const useRaftSession = () => {
     isLoading,
     isConnected,
     error,
+    streamingMessage,
     initSession,
     createSession,
     switchSession,
