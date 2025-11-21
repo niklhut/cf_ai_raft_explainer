@@ -128,7 +128,7 @@ FACTS TO INCORPORATE:
 Command Executed: ${JSON.stringify(parsedAi.command)}
 Old State: ${JSON.stringify(filterState(oldState))}
 New State: ${JSON.stringify(filterState(newState))}
-LastError: ${newState.lastError || "none"}
+${newState.lastError ? `LastError: ${newState.lastError || "none"}` : ""}
 ---
 
 Now, based on these facts, explain the changes and answer the user.`,
