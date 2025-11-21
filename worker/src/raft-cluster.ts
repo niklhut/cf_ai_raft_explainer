@@ -51,6 +51,14 @@ export class RaftCluster {
       return this.getState()
     }
 
+    if (url.pathname === "/execute") {
+      return this.handleExecute(request)
+    }
+
+    if (url.pathname === "/addHistory") {
+      return this.handleAddHistory(request)
+    }
+
     if (url.pathname === "/chat") {
       return this.handleChat(request)
     }
@@ -94,6 +102,32 @@ export class RaftCluster {
 
   async getState() {
     return new Response(JSON.stringify(this.clusterState), {
+      headers: { "Content-Type": "application/json" },
+    })
+  }
+
+  async handleExecute(request: Request) {
+    this.clusterState.lastError = null
+    const { command } = (await request.json()) as { command: RaftCommand }
+    await this.executeCommand(command)
+    return new Response(JSON.stringify(this.clusterState), {
+      headers: { "Content-Type": "application/json" },
+    })
+  }
+
+  async handleAddHistory(request: Request) {
+    const { prompt, explanation } = (await request.json()) as {
+      prompt: string
+      explanation: string
+    }
+    this.clusterState.chatHistory.push({ role: "user", content: prompt })
+    this.clusterState.chatHistory.push({
+      role: "assistant",
+      content: explanation,
+    })
+    await this.state.storage.put("clusterState", this.clusterState)
+    this.broadcastState()
+    return new Response(JSON.stringify({ success: true }), {
       headers: { "Content-Type": "application/json" },
     })
   }

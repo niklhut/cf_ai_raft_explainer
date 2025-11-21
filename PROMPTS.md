@@ -68,7 +68,13 @@ Follow up:
 Thanks. Can we use a the durable object websocket hibernation api instead of polling the state continuously. This would also allow us to add small deleays to the command execution to e.g. show eveery node is a candidate after a leader failure before a new leader is elected. This, however, also requires the message handling in the durable object to be asyncrhounous from the chat response sending
 ```
 
-Separate Chat: 
+Follow up:
+
+```md
+Can you adjust the chat session command to first get only the action command fot the durable object from the LLM based on the last user input. Then capture the current raft cluster state (the lastError and chatMessages are not relevant for this). Afterwards, simulate the Raft cluster and wait for the simulation to finish. When the simulation is finished, capture the state again, this time with the last error since it can contain info about why a raft operation did not work. Then pass the last messages (at most 5), and the old state and new state to the llm to explain what happened and answer the users request
+```
+
+Separate Chat:
 
 ```md
 How can i fix this error:

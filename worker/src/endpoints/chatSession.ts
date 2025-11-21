@@ -1,6 +1,7 @@
 import { OpenAPIRoute } from "chanfana"
 import { z } from "zod"
 import type { AppContext } from "../types"
+import type { RaftClusterState } from "@raft-simulator/shared"
 
 export class ChatSession extends OpenAPIRoute {
   schema = {
@@ -40,6 +41,8 @@ export class ChatSession extends OpenAPIRoute {
 
   async handle(c: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>()
+    const { sessionId } = data.params
+    const { prompt } = data.body
 
     if (c.env.RATE_LIMITER) {
       const ip = c.req.header("CF-Connecting-IP") || "unknown"
@@ -49,44 +52,37 @@ export class ChatSession extends OpenAPIRoute {
       }
     }
 
-    // Call Workers AI to interpret command
-    // const aiResponse = await c.env.AI.run("@cf/meta/llama-3-8b-instruct", {
-    //   messages: [
-    //     {
-    //       role: "system",
-    //       content: `You are a Raft Consensus Algorithm simulator assistant. Interpret user commands into structured JSON.
+    // 1. Get Command from AI
+    const aiCommandResponse = await c.env.AI.run(
+      "@cf/meta/llama-3-8b-instruct",
+      {
+        messages: [
+          {
+            role: "system",
+            content: `You are a Raft Consensus Algorithm simulator assistant. Interpret user commands into structured JSON.
+          
+          Commands:
+          - FAIL_LEADER: "fail leader", "kill leader"
+          - FAIL_NODE: "fail node 2" (requires nodeId)
+          - RECOVER_NODE: "recover node 2" (requires nodeId)
+          - SET_KEY: "set x to 10" (requires key, value, or only key to unset value)
+          - NO_OP: General chat or invalid commands.
 
-    //       Commands:
-    //       - FAIL_LEADER: "fail leader", "kill leader"
-    //       - FAIL_NODE: "fail node 2" (requires nodeId)
-    //       - RECOVER_NODE: "recover node 2" (requires nodeId)
-    //       - SET_KEY: "set x to 10" (requires key, value, or just key to unset)
-    //       - NO_OP: General chat or invalid commands.
-
-    //       Output JSON ONLY:
-    //       {
-    //         "command": { "type": "FAIL_LEADER" | "FAIL_NODE" | "RECOVER_NODE" | "SET_KEY" | "NO_OP", "nodeId": number, "key": string, "value": string },
-    //         "explanation": "Short explanation for the user."
-    //       }`,
-    //     },
-    //     { role: "user", content: data.body.prompt },
-    //   ],
-    // });
-
-    const aiResponse = {
-      response: JSON.stringify({
-        command: { type: "SET_KEY", nodeId: 1, key: "x", value: "10" },
-        explanation:
-          "This is a placeholder response SET_KEY. In a real implementation, the AI would interpret your command.",
-      }),
-    }
+          Output JSON ONLY:
+          {
+            "command": { "type": "FAIL_LEADER" | "FAIL_NODE" | "RECOVER_NODE" | "SET_KEY" | "NO_OP", "nodeId": number, "key": string, "value": string }
+          }`,
+          },
+          { role: "user", content: prompt },
+        ],
+      },
+    )
 
     let parsedAi: {
       command: { type: string; nodeId?: number; key?: string; value?: string }
-      explanation: string
     }
     try {
-      const cleanJson = (aiResponse as any).response
+      const cleanJson = (aiCommandResponse as any).response
         .replace(/```json/g, "")
         .replace(/```/g, "")
         .trim()
@@ -95,25 +91,62 @@ export class ChatSession extends OpenAPIRoute {
       console.error("Failed to parse AI response", e)
       parsedAi = {
         command: { type: "NO_OP" },
-        explanation:
-          "I couldn't understand that command, but I'm here to help with Raft!",
       }
     }
 
-    const id = c.env.RAFT_CLUSTER.idFromString(data.params.sessionId)
+    const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
     const stub = c.env.RAFT_CLUSTER.get(id)
 
-    const doResponse = await stub.fetch("https://dummy/chat", {
+    // 2. Get Current State
+    const oldStateRes = await stub.fetch("https://dummy/getState")
+    const oldState = (await oldStateRes.json()) as RaftClusterState
+
+    // 3. Execute Command
+    const executeRes = await stub.fetch("https://dummy/execute", {
       method: "POST",
-      body: JSON.stringify({
-        prompt: data.body.prompt,
-        command: parsedAi.command,
-        explanation: parsedAi.explanation,
-      }),
+      body: JSON.stringify({ command: parsedAi.command }),
+      headers: { "Content-Type": "application/json" },
+    })
+    const newState = (await executeRes.json()) as RaftClusterState
+
+    // 4. Explain with AI
+    const filterState = (s: RaftClusterState) => ({
+      nodes: s.nodes,
+      keyValueStore: s.keyValueStore,
+    })
+
+    const lastMessages = oldState.chatHistory.slice(-5)
+
+    const aiExplainResponse = await c.env.AI.run(
+      "@cf/meta/llama-3-8b-instruct",
+      {
+        messages: [
+          {
+            role: "system",
+            content: `You are a Raft Consensus expert. Explain what happened based on the state change.
+          User Prompt: ${prompt}
+          Command Executed: ${JSON.stringify(parsedAi.command)}
+          Old State: ${JSON.stringify(filterState(oldState))}
+          New State: ${JSON.stringify(filterState(newState))}
+          LastError: ${newState.lastError || "none"}
+          
+          Explain the state change and answer the user.`,
+          },
+          ...lastMessages.map((m) => ({ role: m.role, content: m.content })),
+          { role: "user", content: prompt },
+        ],
+      },
+    )
+
+    const explanation = (aiExplainResponse as any).response
+
+    // 5. Add History
+    await stub.fetch("https://dummy/addHistory", {
+      method: "POST",
+      body: JSON.stringify({ prompt, explanation }),
       headers: { "Content-Type": "application/json" },
     })
 
-    const responseData = await doResponse.json()
-    return c.json(responseData)
+    return c.json({ success: true, state: newState })
   }
 }
