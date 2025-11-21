@@ -150,7 +150,9 @@ Now, based on these facts, explain the changes and answer the user.`,
     // Return the stream response
     return result.toTextStreamResponse({
       headers: {
-        "X-Raft-State": JSON.stringify(newState),
+        'Content-Type': 'text/x-unknown',
+        'content-encoding': 'identity',
+        'transfer-encoding': 'chunked',
       },
     })
   }
