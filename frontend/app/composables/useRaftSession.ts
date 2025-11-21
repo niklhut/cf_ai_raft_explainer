@@ -2,6 +2,7 @@ import type { RaftClusterState, ChatMessage } from "@raft-simulator/shared"
 import type { SavedSession } from "~/utils/types"
 
 export const useRaftSession = () => {
+  const config = useRuntimeConfig()
   const sessionId = useState<string | null>("sessionId", () => null)
   const savedSessions = useState<SavedSession[]>("savedSessions", () => [])
   const clusterState = useState<RaftClusterState | null>(
@@ -161,9 +162,8 @@ export const useRaftSession = () => {
     if (!sessionId.value || !import.meta.client) return
 
     const protocol = location.protocol === "https:" ? "wss:" : "ws:"
-    // const host = location.host // Use current host instead of hardcoded localhost:8787
-    const host = "localhost:8787"
-    const wsUrl = `${protocol}//${host}/api/ws/${sessionId.value}`
+    const host = config.public.apiBase.replace(/^https?:\/\//, "").replace(/\/$/, "")
+    const wsUrl = `${protocol}//${host}/ws/${sessionId.value}`
 
     ws = new WebSocket(wsUrl)
 
