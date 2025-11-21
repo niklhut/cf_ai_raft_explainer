@@ -13,61 +13,68 @@ const emit = defineEmits<{
 }>()
 
 const input = ref('')
-const chatContainer = ref<HTMLElement | null>(null)
 
-const sendMessage = () => {
+const messages = computed(() => {
+  const msgs = props.history.map((m, i) => ({
+    id: `history-${i}`,
+    role: m.role,
+    parts: [{ type: 'text', text: m.content }]
+  }))
+
+  // Deduplication logic:
+  const lastMsg = msgs[msgs.length - 1]
+  const lastIsUser = lastMsg?.role === 'user'
+  const lastIsAssistant = lastMsg?.role === 'assistant'
+
+  if (props.optimisticUserMessage) {
+    const isDuplicate = lastIsUser && lastMsg?.parts[0]?.type === 'text' && lastMsg.parts[0].text === props.optimisticUserMessage
+    if (!isDuplicate) {
+      msgs.push({
+        id: 'optimistic-user',
+        role: 'user',
+        parts: [{ type: 'text', text: props.optimisticUserMessage }]
+      })
+    }
+  }
+
+  if (props.streamingMessage) {
+    const isDuplicate = lastIsAssistant && lastMsg?.parts[0]?.type === 'text' && lastMsg.parts[0].text.startsWith(props.streamingMessage)
+    if (!isDuplicate) {
+      msgs.push({
+        id: 'streaming-assistant',
+        role: 'assistant',
+        parts: [{ type: 'text', text: props.streamingMessage }]
+      })
+    }
+  }
+
+  return msgs as any // Cast to any to avoid strict type checking for UIMessage which is complex
+})
+
+const status = computed(() => {
+  if (props.loading) {
+    return props.streamingMessage ? 'streaming' : 'submitted'
+  }
+  return 'ready'
+})
+
+const onSubmit = () => {
   if (!input.value.trim() || props.loading) return
   emit('send', input.value)
   input.value = ''
 }
-
-// Auto-scroll to bottom
-watch(() => [props.history.length, props.streamingMessage, props.optimisticUserMessage], async () => {
-  await nextTick()
-  if (chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-  }
-})
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
-    <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
-      <div v-for="(msg, idx) in history" :key="idx" class="flex"
-        :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
-        <div class="max-w-[80%] rounded-lg p-3"
-          :class="msg.role === 'user' ? 'bg-primary-500 text-white' : 'bg-gray-100 dark:bg-gray-800'">
-          <div class="text-xs opacity-70 mb-1">{{ msg.role === 'user' ? 'You' : 'Raft AI' }}</div>
-          <div>{{ msg.content }}</div>
-        </div>
-      </div>
-
-      <div v-if="optimisticUserMessage" class="flex justify-end">
-        <div class="max-w-[80%] rounded-lg p-3 bg-primary-500 text-white">
-          <div class="text-xs opacity-70 mb-1">You</div>
-          <div>{{ optimisticUserMessage }}</div>
-        </div>
-      </div>
-
-      <div v-if="streamingMessage" class="flex justify-start">
-        <div class="max-w-[80%] rounded-lg p-3 bg-gray-100 dark:bg-gray-800">
-          <div class="text-xs opacity-70 mb-1">Raft AI</div>
-          <div class="whitespace-pre-wrap">{{ streamingMessage }}</div>
-        </div>
-      </div>
-
-      <div v-if="loading && !streamingMessage" class="flex justify-start">
-        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 flex items-center space-x-2">
-          <UIcon name="i-heroicons-ellipsis-horizontal" class="animate-pulse" />
-          <span class="text-sm text-gray-500">Thinking...</span>
-        </div>
-      </div>
-    </div>
+  <div class="flex flex-col h-full overflow-hidden">
+    <UChatMessages class="flex-1 p-4" :messages="messages" :status="status" :should-auto-scroll="true" :assistant="{
+      variant: 'outline'
+    }" />
 
     <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-      <UChatPrompt v-model="input" placeholder="Type a command (e.g., 'fail leader', 'set x to 10')..." class="flex-1"
-        :disabled="loading" autofocus @submit.prevent="sendMessage">
-        <UChatPromptSubmit color="primary" />
+      <UChatPrompt v-model="input" :loading="loading" placeholder="Type a command (e.g., 'fail leader')..."
+        @submit="onSubmit">
+        <UChatPromptSubmit :status="status" />
       </UChatPrompt>
     </div>
   </div>
