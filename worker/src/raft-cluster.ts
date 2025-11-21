@@ -29,6 +29,7 @@ export class RaftCluster {
         nodes: nodes,
         keyValueStore: {},
         chatHistory: [],
+        lastError: null,
       }
     })
   }
@@ -98,6 +99,7 @@ export class RaftCluster {
   }
 
   async handleChat(request: Request) {
+    this.clusterState.lastError = null // Reset error on new chat command
     try {
       const { prompt, command, explanation } = (await request.json()) as {
         prompt: string
@@ -210,6 +212,10 @@ export class RaftCluster {
       // Simulate delay for consensus
       await new Promise((resolve) => setTimeout(resolve, 1000))
       this.clusterState.keyValueStore[key] = value
+    } else if (!leader) {
+      this.clusterState.lastError = "No leader available"
+    } else if (!majorityAlive) {
+      this.clusterState.lastError = "Not enough nodes alive for consensus"
     }
   }
 
@@ -232,6 +238,7 @@ export class RaftCluster {
       // If less than half are alive, no leader can be elected
       if (aliveNodes.length < Math.ceil(this.clusterState.nodes.length / 2)) {
         console.log("Not enough nodes to elect a leader")
+        this.clusterState.lastError = "Not enough nodes to elect a leader"
         return
       }
 
