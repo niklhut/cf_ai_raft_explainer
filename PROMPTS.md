@@ -74,6 +74,18 @@ Follow up:
 Can you adjust the chat session command to first get only the action command fot the durable object from the LLM based on the last user input. Then capture the current raft cluster state (the lastError and chatMessages are not relevant for this). Afterwards, simulate the Raft cluster and wait for the simulation to finish. When the simulation is finished, capture the state again, this time with the last error since it can contain info about why a raft operation did not work. Then pass the last messages (at most 5), and the old state and new state to the llm to explain what happened and answer the users request
 ```
 
+Follow up:
+
+```md
+Thanks. Can we use the Vercel AI SDK with the cloudflare workers ai provider to allow for typesafety and streaming the final response to the client
+````
+
+The previous command did not work since it could not figure out the correct workers ai provider package, so re-run with this prompt:
+
+```md
+Thanks. Can we use the Vercel AI SDK with the cloudflare workers ai provider (pnpm add workers-ai-provider) to allow for typesafety and streaming the final response to the client.
+```
+
 Separate Chat:
 
 ```md

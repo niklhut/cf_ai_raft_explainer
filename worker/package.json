@@ -9,10 +9,12 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@raft-simulator/shared": "workspace:*",
+    "ai": "^5.0.98",
     "chanfana": "^2.6.3",
     "hono": "^4.6.20",
-    "zod": "^3.24.1",
-    "@raft-simulator/shared": "workspace:*"
+    "workers-ai-provider": "^2.0.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "22.13.0",
