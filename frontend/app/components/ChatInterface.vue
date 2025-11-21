@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import type { ChatMessage } from '@raft-simulator/shared'
 
 const props = defineProps<{
@@ -9,7 +10,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'send', message: string): void
+  (e: 'send', message: string): void,
 }>()
 
 const input = ref('')
@@ -63,19 +64,30 @@ const onSubmit = () => {
   emit('send', input.value)
   input.value = ''
 }
+
+const breakpoints = useBreakpoints(breakpointsTailwind)
+const isMobile = breakpoints.smaller('lg')
 </script>
 
 <template>
-  <div class="flex flex-col h-full overflow-hidden">
-    <UChatMessages class="flex-1 p-4" :messages="messages" :status="status" :should-auto-scroll="true" :assistant="{
-      variant: 'outline'
-    }" />
+  <UDashboardPanel id="chat-panel">
+    <template #header v-if="!isMobile">
+      <UDashboardNavbar title="Interactive Assistant" />
+    </template>
 
-    <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-      <UChatPrompt v-model="input" :loading="loading" placeholder="Type a command (e.g., 'fail leader')..."
-        @submit="onSubmit">
-        <UChatPromptSubmit :status="status" />
-      </UChatPrompt>
-    </div>
-  </div>
+    <template #body>
+      <UChatMessages :messages="messages" :status="status" :should-auto-scroll="true" :assistant="{
+        variant: 'naked'
+      }" />
+    </template>
+
+    <template #footer>
+      <UContainer class="pb-2 sm:pb-3">
+        <UChatPrompt v-model="input" :loading="loading" placeholder="Type a command (e.g., 'fail leader')..."
+          @submit="onSubmit">
+          <UChatPromptSubmit :status="status" />
+        </UChatPrompt>
+      </UContainer>
+    </template>
+  </UDashboardPanel>
 </template>

@@ -17,13 +17,10 @@ const getNodeColor = (role: string) => {
 </script>
 
 <template>
-  <div class="grid grid-cols-5 gap-4">
-    <div 
-      v-for="node in nodes" 
-      :key="node.id"
+  <div class="grid grid-cols-1 md:grid-cols-3 2xl:grid-cols-5 gap-4">
+    <div v-for="node in nodes" :key="node.id"
       class="flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all duration-300"
-      :class="getNodeColor(node.role)"
-    >
+      :class="getNodeColor(node.role)">
       <div class="text-2xl font-bold mb-2">Node {{ node.id }}</div>
       <div class="text-sm uppercase font-semibold">{{ node.role === 'dead' ? 'DEAD' : node.role }}</div>
       <div class="text-xs mt-1">Term: {{ node.term }}</div>
