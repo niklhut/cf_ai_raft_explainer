@@ -11,7 +11,14 @@ export const useRaftSession = () => {
   const isLoading = useState<boolean>("isLoading", () => false)
   const isConnected = useState<boolean>("isConnected", () => false)
   const error = useState<string | null>("error", () => null)
-  const streamingMessage = useState<string | null>("streamingMessage", () => null)
+  const streamingMessage = useState<string | null>(
+    "streamingMessage",
+    () => null,
+  )
+  const optimisticUserMessage = useState<string | null>(
+    "optimisticUserMessage",
+    () => null,
+  )
 
   const { get, post } = useApi()
 
@@ -34,8 +41,13 @@ export const useRaftSession = () => {
       if (import.meta.client) {
         localStorage.setItem("raft_session_id", res.sessionId)
 
-        if (!savedSessions.value.find(session => session.id === res.sessionId)) {
-          savedSessions.value.push({ id: res.sessionId, title: `Raft Simulation ${savedSessions.value.length + 1}` })
+        if (
+          !savedSessions.value.find((session) => session.id === res.sessionId)
+        ) {
+          savedSessions.value.push({
+            id: res.sessionId,
+            title: `Raft Simulation ${savedSessions.value.length + 1}`,
+          })
           localStorage.setItem(
             "raft_sessions",
             JSON.stringify(savedSessions.value),
@@ -86,15 +98,19 @@ export const useRaftSession = () => {
     try {
       isLoading.value = true
       streamingMessage.value = ""
-      
+      optimisticUserMessage.value = prompt
+
       const config = useRuntimeConfig()
-      const response = await fetch(`${config.public.apiBase}/chat/${sessionId.value}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
+      const response = await fetch(
+        `${config.public.apiBase}/chat/${sessionId.value}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ prompt }),
         },
-        body: JSON.stringify({ prompt })
-      })
+      )
 
       if (!response.ok) throw new Error("Failed to send message")
 
@@ -118,18 +134,23 @@ export const useRaftSession = () => {
         streamingMessage.value += decoder.decode(value, { stream: true })
       }
 
-      // Manually update history locally to prevent flicker before WS update
-      if (clusterState.value && streamingMessage.value) {
-         clusterState.value.chatHistory.push({ role: "user", content: prompt })
-         clusterState.value.chatHistory.push({ role: "assistant", content: streamingMessage.value })
-      }
+      // We do NOT manually update history here to avoid duplication with WS update.
+      // The WS update from the server (triggered by addHistory) will arrive shortly.
+      // We keep optimisticUserMessage and streamingMessage populated until then?
+      // No, if we clear them now, there might be a flicker.
+      // But if we don't clear them, we might see duplicates when WS arrives.
 
+      // Strategy: Clear them only when we see the new messages in the clusterState via WS.
+      // For now, let's clear them and rely on the speed of WS.
+      // If flicker is an issue, we can improve later.
+      // Actually, the user complained about duplication, so removing the manual push is the priority.
     } catch (e) {
       error.value = "Failed to send message"
       console.error(e)
     } finally {
       isLoading.value = false
-      streamingMessage.value = null
+      // Do NOT clear optimistic messages here.
+      // They will be cleared when the WS update arrives to prevent flicker.
     }
   }
 
@@ -140,7 +161,8 @@ export const useRaftSession = () => {
     if (!sessionId.value || !import.meta.client) return
 
     const protocol = location.protocol === "https:" ? "wss:" : "ws:"
-    const host = "localhost:8787" // In prod this should be dynamic
+    // const host = location.host // Use current host instead of hardcoded localhost:8787
+    const host = "localhost:8787"
     const wsUrl = `${protocol}//${host}/api/ws/${sessionId.value}`
 
     ws = new WebSocket(wsUrl)
@@ -158,6 +180,18 @@ export const useRaftSession = () => {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data) as RaftClusterState
+
+        // If we have optimistic messages, and the new data has more history than before,
+        // it means our message has been committed. Clear optimistic state to avoid duplicates.
+        if (
+          optimisticUserMessage.value &&
+          data.chatHistory.length >
+            (clusterState.value?.chatHistory.length || 0)
+        ) {
+          optimisticUserMessage.value = null
+          streamingMessage.value = null
+        }
+
         clusterState.value = data
       } catch (e) {
         console.error("Failed to parse WS message", e)
@@ -207,6 +241,7 @@ export const useRaftSession = () => {
     isConnected,
     error,
     streamingMessage,
+    optimisticUserMessage,
     initSession,
     createSession,
     switchSession,

@@ -5,6 +5,7 @@ const props = defineProps<{
   history: ChatMessage[]
   loading: boolean
   streamingMessage?: string | null
+  optimisticUserMessage?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -21,7 +22,7 @@ const sendMessage = () => {
 }
 
 // Auto-scroll to bottom
-watch(() => [props.history.length, props.streamingMessage], async () => {
+watch(() => [props.history.length, props.streamingMessage, props.optimisticUserMessage], async () => {
   await nextTick()
   if (chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight
@@ -44,6 +45,13 @@ watch(() => [props.history.length, props.streamingMessage], async () => {
         >
           <div class="text-xs opacity-70 mb-1">{{ msg.role === 'user' ? 'You' : 'Raft AI' }}</div>
           <div>{{ msg.content }}</div>
+        </div>
+      </div>
+
+      <div v-if="optimisticUserMessage" class="flex justify-end">
+        <div class="max-w-[80%] rounded-lg p-3 bg-primary-500 text-white">
+          <div class="text-xs opacity-70 mb-1">You</div>
+          <div>{{ optimisticUserMessage }}</div>
         </div>
       </div>
 

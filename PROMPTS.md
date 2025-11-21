@@ -92,6 +92,18 @@ Follow up:
 Thanks. Adjust the client to accept the streaming responses and display them accordingly.
 ```
 
+Follow up:
+
+```md
+When the final response is generated, I did not see it being streamed and displayed as such. Also after the durable object stored the message in its state, both the user and system messages were duplicated. Fix this please.
+```
+
+Follow up:
+
+```md
+But now I do not see commited state updates and the chat also does not display, only after a refresh of the page
+```
+
 Separate Chat:
 
 ```md

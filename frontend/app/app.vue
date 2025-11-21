@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { initSession, startPolling, stopPolling, clusterState, isLoading, isConnected, error, sendMessage, streamingMessage } = useRaftSession()
+const { initSession, startPolling, stopPolling, clusterState, isLoading, isConnected, error, sendMessage, streamingMessage, optimisticUserMessage } = useRaftSession()
 
 onMounted(async () => {
   await initSession()
@@ -57,6 +57,7 @@ onUnmounted(() => {
             :history="clusterState.chatHistory" 
             :loading="isLoading"
             :streaming-message="streamingMessage"
+            :optimistic-user-message="optimisticUserMessage"
             @send="sendMessage"
           />
         </div>
