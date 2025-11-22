@@ -57,6 +57,8 @@ export const useRaftSession = () => {
       }
 
       await fetchState()
+      closeWebSocket()
+      connectWebSocket()
     } catch (e) {
       error.value = "Failed to create session"
       console.error(e)
@@ -92,6 +94,8 @@ export const useRaftSession = () => {
       localStorage.setItem("raft_session_id", id)
     }
     await fetchState()
+    closeWebSocket()
+    connectWebSocket()
   }
 
   const sendMessage = async (prompt: string) => {
@@ -212,6 +216,13 @@ export const useRaftSession = () => {
 
     ws.onerror = (e) => {
       console.error("WS Error", e)
+    }
+  }
+
+  const closeWebSocket = () => {
+    if (ws) {
+      ws.close()
+      ws = null
     }
   }
 
