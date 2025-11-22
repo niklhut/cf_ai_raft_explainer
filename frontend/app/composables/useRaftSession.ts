@@ -221,7 +221,7 @@ export const useRaftSession = () => {
 
   const closeWebSocket = () => {
     if (ws) {
-      ws.close()
+      ws.close(1000, "Closing previous connection")
       ws = null
     }
   }
