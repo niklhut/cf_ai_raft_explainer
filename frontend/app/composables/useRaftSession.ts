@@ -1,6 +1,7 @@
 import type { RaftClusterState, ChatMessage } from "@raft-simulator/shared"
 import type { SavedSession } from "~/utils/types"
-import type { UIMessage } from "ai"
+import { Chat } from "@ai-sdk/vue"
+import { TextStreamChatTransport, type UIMessage } from "ai"
 
 export const useRaftSession = () => {
   const config = useRuntimeConfig()
@@ -13,70 +14,71 @@ export const useRaftSession = () => {
   const isLoading = useState<boolean>("isLoading", () => false)
   const isConnected = useState<boolean>("isConnected", () => false)
   const error = useState<string | null>("error", () => null)
-  const streamingMessage = useState<string | null>(
-    "streamingMessage",
-    () => null,
-  )
-  const optimisticUserMessage = useState<string | null>(
-    "optimisticUserMessage",
-    () => null,
-  )
-
-  const messages = computed<UIMessage[]>(() => {
-    const msgs: UIMessage[] = []
-
-    if (clusterState.value?.chatHistory) {
-      msgs.push(
-        ...clusterState.value.chatHistory.map(
-          (m, i) =>
-            ({
-              id: `history-${i}`,
-              role: m.role,
-              parts: [{ type: "text", text: m.content }],
-            }) as unknown as UIMessage,
-        ),
-      )
-    }
-
-    if (optimisticUserMessage.value) {
-      const lastMsg = msgs[msgs.length - 1]
-      const lastContent = lastMsg
-        ? (lastMsg as any).content || (lastMsg as any).parts?.[0]?.text
-        : ""
-      const isDuplicate =
-        lastMsg?.role === "user" && lastContent === optimisticUserMessage.value
-
-      if (!isDuplicate) {
-        msgs.push({
-          id: "optimistic-user",
-          role: "user",
-          parts: [{ type: "text", text: optimisticUserMessage.value }],
-        } as unknown as UIMessage)
-      }
-    }
-
-    if (streamingMessage.value) {
-      const lastMsg = msgs[msgs.length - 1]
-      const lastContent = lastMsg
-        ? (lastMsg as any).content || (lastMsg as any).parts?.[0]?.text
-        : ""
-      const isDuplicate =
-        lastMsg?.role === "assistant" &&
-        lastContent.startsWith(streamingMessage.value)
-
-      if (!isDuplicate) {
-        msgs.push({
-          id: "streaming-assistant",
-          role: "assistant",
-          parts: [{ type: "text", text: streamingMessage.value }],
-        } as unknown as UIMessage)
-      }
-    }
-
-    return msgs
-  })
 
   const { get, post } = useApi()
+
+  const transport = new TextStreamChatTransport({
+    fetch: async (input, init) => {
+      if (!sessionId.value) throw new Error("No session")
+      const url = `${config.public.apiBase}/chat/${sessionId.value}`
+
+      const response = await fetch(url, init)
+
+      if (!response.ok) throw new Error("Failed to send message")
+
+      // Handle State Update from Header
+      const stateHeader = response.headers.get("X-Raft-State")
+      if (stateHeader && clusterState.value) {
+        const newState = JSON.parse(stateHeader)
+        clusterState.value.nodes = newState.nodes
+        clusterState.value.keyValueStore = newState.keyValueStore
+        clusterState.value.lastError = newState.lastError
+      }
+
+      return response
+    },
+  })
+
+  // Initialize Chat with empty messages, we'll sync from clusterState
+  const chat = new Chat({
+    messages: [],
+    transport,
+  })
+
+  // Sync chat messages with clusterState
+  watch(
+    [() => clusterState.value?.chatHistory, () => chat.status],
+    ([newHistory, status]) => {
+      if (newHistory && (status === "ready" || status === "error")) {
+        // Convert ChatMessage to UIMessage
+        const newMessages = newHistory.map((m, i) => ({
+          id: `history-${i}`,
+          role: m.role,
+          content: m.content,
+          parts: [{ type: "text", text: m.content }],
+        })) as unknown as UIMessage[]
+
+        // Simple check to avoid unnecessary updates if length is same and last message content is same
+        const currentMessages = chat.messages
+
+        // Avoid reverting local state if we have more messages (e.g. just finished streaming but WS hasn't caught up)
+        if (currentMessages.length > newMessages.length) {
+          return
+        }
+
+        if (currentMessages.length === newMessages.length) {
+          const lastCurrent = currentMessages[currentMessages.length - 1] as any
+          const lastNew = newMessages[newMessages.length - 1] as any
+          if (lastCurrent?.content === lastNew?.content) {
+            return
+          }
+        }
+
+        chat.messages = newMessages
+      }
+    },
+    { immediate: true },
+  )
 
   const fetchState = async () => {
     if (!sessionId.value) return
@@ -148,6 +150,7 @@ export const useRaftSession = () => {
     if (import.meta.client) {
       localStorage.setItem("raft_session_id", id)
     }
+    chat.messages = [] // Clear chat history
     await fetchState()
     closeWebSocket()
     connectWebSocket()
@@ -156,61 +159,10 @@ export const useRaftSession = () => {
   const sendMessage = async (prompt: string) => {
     if (!sessionId.value) return
     try {
-      isLoading.value = true
-      streamingMessage.value = ""
-      optimisticUserMessage.value = prompt
-
-      const config = useRuntimeConfig()
-      const response = await fetch(
-        `${config.public.apiBase}/chat/${sessionId.value}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ prompt }),
-        },
-      )
-
-      if (!response.ok) throw new Error("Failed to send message")
-
-      // Handle State Update from Header
-      const stateHeader = response.headers.get("X-Raft-State")
-      if (stateHeader && clusterState.value) {
-        const newState = JSON.parse(stateHeader)
-        clusterState.value.nodes = newState.nodes
-        clusterState.value.keyValueStore = newState.keyValueStore
-        clusterState.value.lastError = newState.lastError
-      }
-
-      // Handle Streaming Response
-      const reader = response.body?.getReader()
-      if (!reader) return
-
-      const decoder = new TextDecoder()
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        streamingMessage.value += decoder.decode(value, { stream: true })
-      }
-
-      // We do NOT manually update history here to avoid duplication with WS update.
-      // The WS update from the server (triggered by addHistory) will arrive shortly.
-      // We keep optimisticUserMessage and streamingMessage populated until then?
-      // No, if we clear them now, there might be a flicker.
-      // But if we don't clear them, we might see duplicates when WS arrives.
-
-      // Strategy: Clear them only when we see the new messages in the clusterState via WS.
-      // For now, let's clear them and rely on the speed of WS.
-      // If flicker is an issue, we can improve later.
-      // Actually, the user complained about duplication, so removing the manual push is the priority.
+      await chat.sendMessage({ text: prompt })
     } catch (e) {
       error.value = "Failed to send message"
       console.error(e)
-    } finally {
-      isLoading.value = false
-      // Do NOT clear optimistic messages here.
-      // They will be cleared when the WS update arrives to prevent flicker.
     }
   }
 
@@ -221,7 +173,9 @@ export const useRaftSession = () => {
     if (!sessionId.value || !import.meta.client) return
 
     const protocol = location.protocol === "https:" ? "wss:" : "ws:"
-    const host = config.public.apiBase.replace(/^https?:\/\//, "").replace(/\/$/, "")
+    const host = config.public.apiBase
+      .replace(/^https?:\/\//, "")
+      .replace(/\/$/, "")
     const wsUrl = `${protocol}//${host}/ws/${sessionId.value}`
 
     ws = new WebSocket(wsUrl)
@@ -239,18 +193,6 @@ export const useRaftSession = () => {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data) as RaftClusterState
-
-        // If we have optimistic messages, and the new data has more history than before,
-        // it means our message has been committed. Clear optimistic state to avoid duplicates.
-        if (
-          optimisticUserMessage.value &&
-          data.chatHistory.length >
-            (clusterState.value?.chatHistory.length || 0)
-        ) {
-          optimisticUserMessage.value = null
-          streamingMessage.value = null
-        }
-
         clusterState.value = data
       } catch (e) {
         console.error("Failed to parse WS message", e)
@@ -306,9 +248,7 @@ export const useRaftSession = () => {
     isLoading,
     isConnected,
     error,
-    streamingMessage,
-    optimisticUserMessage,
-    messages,
+    chat,
     initSession,
     createSession,
     switchSession,

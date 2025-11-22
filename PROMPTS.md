@@ -518,3 +518,9 @@ New Chat:
 ```md
 Update the nuxt frontend to use the vercel ai sdk types directly, not some custom version as currently. Make sure it still works with the web socket to the durable object
 ```
+
+Follow up:
+
+```md
+Can we use the ai sdk Chat type to easily be able to access the status of the chat and the messages
+```
