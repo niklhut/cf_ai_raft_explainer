@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 
-const { initSession, startPolling, stopPolling, clusterState, isLoading, isConnected, error, sendMessage, streamingMessage, optimisticUserMessage } = useRaftSession()
+const { initSession, startPolling, stopPolling, clusterState, isLoading, isConnected, error, sendMessage, streamingMessage, optimisticUserMessage, messages } = useRaftSession()
 
 const isChatSlideoverOpen = ref(false)
 
@@ -60,8 +60,7 @@ const isMobile = breakpoints.smaller('lg')
 
         </UDashboardPanel>
 
-        <ChatInterface v-if="clusterState && !isMobile" :history="clusterState.chatHistory" :loading="isLoading"
-            :streaming-message="streamingMessage" :optimistic-user-message="optimisticUserMessage"
+        <ChatInterface v-if="clusterState && !isMobile" :messages="messages" :loading="isLoading"
             @send="sendMessage" />
 
         <ClientOnly>
@@ -71,8 +70,7 @@ const isMobile = breakpoints.smaller('lg')
                     <UIcon name="i-heroicons-x-mark" class="w-6 h-6 cursor-pointer" @click="isChatSlideoverOpen = false" />
                 </template>
                 <template #body>
-                    <ChatInterface v-if="clusterState" :history="clusterState.chatHistory" :loading="isLoading"
-                        :streaming-message="streamingMessage" :optimistic-user-message="optimisticUserMessage"
+                    <ChatInterface v-if="clusterState" :messages="messages" :loading="isLoading"
                         @send="sendMessage" @close="isChatSlideoverOpen = false" />
                 </template>
             </USlideover>

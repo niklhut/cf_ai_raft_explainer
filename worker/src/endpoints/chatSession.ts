@@ -58,7 +58,8 @@ export class ChatSession extends OpenAPIRoute {
     }
 
     const workersai = createWorkersAI({ binding: c.env.AI })
-    const model = workersai("@cf/meta/llama-3-8b-instruct")
+    const actionModel = workersai("@cf/meta/llama-3-8b-instruct")
+    const explanationModel = workersai("@cf/meta/llama-4-scout-17b-16e-instruct" as any)
 
     const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
     const stub = c.env.RAFT_CLUSTER.get(id)
@@ -72,7 +73,7 @@ export class ChatSession extends OpenAPIRoute {
 
     // Get Command from AI
     const { object: parsedAi } = await generateObject({
-      model,
+      model: actionModel,
       schema: z.object({
         command: z.object({
           type: z.enum([
@@ -122,7 +123,7 @@ ${JSON.stringify(filteredOldState)}
     const lastMessages = oldState.chatHistory.slice(-5)
 
     const result = streamText({
-      model,
+      model: explanationModel,
       system: `You are a Raft Consensus Algorithm expert and a simulator narrator. Your task is to provide a concise, natural-sounding, and highly informative explanation of what just occurred in the Raft cluster.
 
 Instructions:

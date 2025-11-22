@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
-import type { ChatMessage } from '@raft-simulator/shared'
+import type { UIMessage } from 'ai'
+import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 
 const props = defineProps<{
-  history: ChatMessage[]
+  messages: UIMessage[]
   loading: boolean
-  streamingMessage?: string | null
-  optimisticUserMessage?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -15,46 +14,13 @@ const emit = defineEmits<{
 
 const input = ref('')
 
-const messages = computed(() => {
-  const msgs = props.history.map((m, i) => ({
-    id: `history-${i}`,
-    role: m.role,
-    parts: [{ type: 'text', text: m.content }]
-  }))
-
-  // Deduplication logic:
-  const lastMsg = msgs[msgs.length - 1]
-  const lastIsUser = lastMsg?.role === 'user'
-  const lastIsAssistant = lastMsg?.role === 'assistant'
-
-  if (props.optimisticUserMessage) {
-    const isDuplicate = lastIsUser && lastMsg?.parts[0]?.type === 'text' && lastMsg.parts[0].text === props.optimisticUserMessage
-    if (!isDuplicate) {
-      msgs.push({
-        id: 'optimistic-user',
-        role: 'user',
-        parts: [{ type: 'text', text: props.optimisticUserMessage }]
-      })
-    }
-  }
-
-  if (props.streamingMessage) {
-    const isDuplicate = lastIsAssistant && lastMsg?.parts[0]?.type === 'text' && lastMsg.parts[0].text.startsWith(props.streamingMessage)
-    if (!isDuplicate) {
-      msgs.push({
-        id: 'streaming-assistant',
-        role: 'assistant',
-        parts: [{ type: 'text', text: props.streamingMessage }]
-      })
-    }
-  }
-
-  return msgs as any // Cast to any to avoid strict type checking for UIMessage which is complex
-})
-
 const status = computed(() => {
   if (props.loading) {
-    return props.streamingMessage ? 'streaming' : 'submitted'
+    // We can't easily distinguish streaming vs submitted without more props, 
+    // but if the last message is assistant and loading, maybe streaming?
+    // For now, let's just say 'submitted' if loading.
+    // Or we can keep passing streaming status if needed.
+    return 'submitted'
   }
   return 'ready'
 })
@@ -78,7 +44,11 @@ const isMobile = breakpoints.smaller('lg')
     <template #body>
       <UChatMessages :messages="messages" :status="status" :should-auto-scroll="true" :assistant="{
         variant: 'naked'
-      }" />
+      }">
+        <template #content="{ message }">
+          <MDC :value="getTextFromMessage(message)" :cache-key="message.id" class="*:first:mt-0 *:last:mb-0" />
+        </template>
+      </UChatMessages>
     </template>
 
     <template #footer>

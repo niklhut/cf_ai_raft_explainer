@@ -1,5 +1,6 @@
 import type { RaftClusterState, ChatMessage } from "@raft-simulator/shared"
 import type { SavedSession } from "~/utils/types"
+import type { UIMessage } from "ai"
 
 export const useRaftSession = () => {
   const config = useRuntimeConfig()
@@ -20,6 +21,60 @@ export const useRaftSession = () => {
     "optimisticUserMessage",
     () => null,
   )
+
+  const messages = computed<UIMessage[]>(() => {
+    const msgs: UIMessage[] = []
+
+    if (clusterState.value?.chatHistory) {
+      msgs.push(
+        ...clusterState.value.chatHistory.map(
+          (m, i) =>
+            ({
+              id: `history-${i}`,
+              role: m.role,
+              parts: [{ type: "text", text: m.content }],
+            }) as unknown as UIMessage,
+        ),
+      )
+    }
+
+    if (optimisticUserMessage.value) {
+      const lastMsg = msgs[msgs.length - 1]
+      const lastContent = lastMsg
+        ? (lastMsg as any).content || (lastMsg as any).parts?.[0]?.text
+        : ""
+      const isDuplicate =
+        lastMsg?.role === "user" && lastContent === optimisticUserMessage.value
+
+      if (!isDuplicate) {
+        msgs.push({
+          id: "optimistic-user",
+          role: "user",
+          parts: [{ type: "text", text: optimisticUserMessage.value }],
+        } as unknown as UIMessage)
+      }
+    }
+
+    if (streamingMessage.value) {
+      const lastMsg = msgs[msgs.length - 1]
+      const lastContent = lastMsg
+        ? (lastMsg as any).content || (lastMsg as any).parts?.[0]?.text
+        : ""
+      const isDuplicate =
+        lastMsg?.role === "assistant" &&
+        lastContent.startsWith(streamingMessage.value)
+
+      if (!isDuplicate) {
+        msgs.push({
+          id: "streaming-assistant",
+          role: "assistant",
+          parts: [{ type: "text", text: streamingMessage.value }],
+        } as unknown as UIMessage)
+      }
+    }
+
+    return msgs
+  })
 
   const { get, post } = useApi()
 
@@ -253,6 +308,7 @@ export const useRaftSession = () => {
     error,
     streamingMessage,
     optimisticUserMessage,
+    messages,
     initSession,
     createSession,
     switchSession,

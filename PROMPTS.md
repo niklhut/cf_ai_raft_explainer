@@ -512,3 +512,9 @@ How can I improve the prompt to sound more natural not refer to the additional c
 
 According to the Raft consensus algorithm, when the leader node fails, the other nodes in the cluster will detect this failure and initiate an election to choose a new leader. In this specific state change, we can see that the old state has the node with id 2 as the leader, but in the new state, its role has changed to "dead" and its term is still 1. This suggests that node 2 has failed or is no longer available. Meanwhile, node 3 has taken over as the new leader, with a new term of 2. The other nodes (1, 4, and 5) have updated their roles to follower and their term to 2, indicating that they have acknowledged the new leader and are following its instructions. The FAIL_LEADER command was executed to notify the cluster that the previous leader has failed, and the election process has resulted in a new leader being chosen.
 ```
+
+New Chat:
+
+```md
+Update the nuxt frontend to use the vercel ai sdk types directly, not some custom version as currently. Make sure it still works with the web socket to the durable object
+```
