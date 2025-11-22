@@ -37,6 +37,13 @@ export class ChatSession extends OpenAPIRoute {
     },
   }
 
+  filterState(s: RaftClusterState) {
+    return {
+      nodes: s.nodes,
+      keyValueStore: s.keyValueStore,
+    }
+  }
+
   async handle(c: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>()
     const { sessionId } = data.params
@@ -53,7 +60,17 @@ export class ChatSession extends OpenAPIRoute {
     const workersai = createWorkersAI({ binding: c.env.AI })
     const model = workersai("@cf/meta/llama-3-8b-instruct")
 
-    // 1. Get Command from AI
+    const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
+    const stub = c.env.RAFT_CLUSTER.get(id)
+
+    // Get Current State
+    const oldStateRes = await stub.fetch("https://dummy/getState")
+    const oldState = (await oldStateRes.json()) as RaftClusterState
+    const filteredOldState = this.filterState(oldState)
+
+    console.log("Old State:", filteredOldState)
+
+    // Get Command from AI
     const { object: parsedAi } = await generateObject({
       model,
       schema: z.object({
@@ -84,18 +101,15 @@ User: "fail leader" -> JSON: { "command": { "type": "FAIL_LEADER" } }
 User: "fail node 2" -> JSON: { "command": { "type": "FAIL_NODE", "nodeId": 2 } }
 User: "set x to 10" -> JSON: { "command": { "type": "SET_KEY", "key": "x", "value": "10" } }
 User: "hello" -> JSON: { "command": { "type": "NO_OP" } }
+
+---
+This is the current system state. Use it to inform your command choice, but do not reference it in your output.
+${JSON.stringify(filteredOldState)}
 `,
       prompt: prompt,
     })
 
     console.log("LLM response for command:", parsedAi)
-
-    const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
-    const stub = c.env.RAFT_CLUSTER.get(id)
-
-    // 2. Get Current State
-    const oldStateRes = await stub.fetch("https://dummy/getState")
-    const oldState = (await oldStateRes.json()) as RaftClusterState
 
     // 3. Execute Command
     const executeRes = await stub.fetch("https://dummy/execute", {
@@ -104,12 +118,6 @@ User: "hello" -> JSON: { "command": { "type": "NO_OP" } }
       headers: { "Content-Type": "application/json" },
     })
     const newState = (await executeRes.json()) as RaftClusterState
-
-    // 4. Explain with AI (Streaming)
-    const filterState = (s: RaftClusterState) => ({
-      nodes: s.nodes,
-      keyValueStore: s.keyValueStore,
-    })
 
     const lastMessages = oldState.chatHistory.slice(-5)
 
@@ -126,8 +134,8 @@ Instructions:
 ---
 FACTS TO INCORPORATE:
 Command Executed: ${JSON.stringify(parsedAi.command)}
-Old State: ${JSON.stringify(filterState(oldState))}
-New State: ${JSON.stringify(filterState(newState))}
+Old State: ${JSON.stringify(filteredOldState)}
+New State: ${JSON.stringify(this.filterState(newState))}
 ${newState.lastError ? `LastError: ${newState.lastError || "none"}` : ""}
 ---
 
@@ -150,9 +158,9 @@ Now, based on these facts, explain the changes and answer the user.`,
     // Return the stream response
     return result.toTextStreamResponse({
       headers: {
-        'Content-Type': 'text/x-unknown',
-        'content-encoding': 'identity',
-        'transfer-encoding': 'chunked',
+        "Content-Type": "text/x-unknown",
+        "content-encoding": "identity",
+        "transfer-encoding": "chunked",
       },
     })
   }
