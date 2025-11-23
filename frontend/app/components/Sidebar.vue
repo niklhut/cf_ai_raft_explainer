@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const { savedSessions, sessionId, createSession, switchSession } = useRaftSession()
+const raftStore = useRaftStore()
+const { createSession, switchSession } = raftStore
+const { savedSessions, sessionId } = storeToRefs(raftStore)
 
 const items = computed(() => [
   [

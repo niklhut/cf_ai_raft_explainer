@@ -1,8 +1,8 @@
+import { UIDataTypes, UIMessage, UITool } from "ai"
 import type { Env } from "./types"
 import type {
   NodeState,
   RaftClusterState,
-  ChatMessage,
   RaftCommand,
 } from "@raft-simulator/shared"
 
@@ -116,14 +116,14 @@ export class RaftCluster {
   }
 
   async handleAddHistory(request: Request) {
-    const { prompt, explanation } = (await request.json()) as {
-      prompt: string
+    const { parts, explanation } = (await request.json()) as {
+      parts: UIMessage[]
       explanation: string
     }
-    this.clusterState.chatHistory.push({ role: "user", content: prompt })
+    this.clusterState.chatHistory.push(...parts)
     this.clusterState.chatHistory.push({
       role: "assistant",
-      content: explanation,
+      parts: explanation
     })
     await this.state.storage.put("clusterState", this.clusterState)
     this.broadcastState()

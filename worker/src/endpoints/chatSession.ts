@@ -16,9 +16,24 @@ export class ChatSession extends OpenAPIRoute {
       body: {
         content: {
           "application/json": {
-            schema: z.object({
-              prompt: z.string(),
-            }),
+            schema: z
+              .object({
+                messages: z.array(
+                  z.object({
+                    role: z.string(),
+                    content: z.string().optional(),
+                    parts: z
+                      .array(
+                        z.object({
+                          type: z.string(),
+                          text: z.string(),
+                        }),
+                      )
+                      .optional(),
+                  }),
+                ),
+              })
+              .passthrough(),
           },
         },
       },
@@ -27,7 +42,7 @@ export class ChatSession extends OpenAPIRoute {
       "200": {
         description: "Returns the AI response stream",
         content: {
-          "text/plain": {
+          "text/event-stream": {
             schema: z.string(),
           },
         },
@@ -46,8 +61,14 @@ export class ChatSession extends OpenAPIRoute {
 
   async handle(c: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>()
+    console.log("Data:", data)
     const { sessionId } = data.params
-    const { prompt } = data.body
+    const { messages } = data.body
+    const lastMessage = messages[messages.length - 1]
+    const prompt =
+      lastMessage.content ||
+      lastMessage.parts?.map((p) => p.text).join("") ||
+      ""
 
     if (c.env.RATE_LIMITER) {
       const ip = c.req.header("CF-Connecting-IP") || "unknown"
@@ -59,7 +80,9 @@ export class ChatSession extends OpenAPIRoute {
 
     const workersai = createWorkersAI({ binding: c.env.AI })
     const actionModel = workersai("@cf/meta/llama-3-8b-instruct")
-    const explanationModel = workersai("@cf/meta/llama-4-scout-17b-16e-instruct" as any)
+    const explanationModel = workersai(
+      "@cf/meta/llama-4-scout-17b-16e-instruct" as any,
+    )
 
     const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
     const stub = c.env.RAFT_CLUSTER.get(id)
@@ -90,23 +113,23 @@ export class ChatSession extends OpenAPIRoute {
       }),
       system: `You are a Raft Consensus Algorithm simulator assistant.
 
-Your ONLY task is to interpret the user's command and output a single JSON object that strictly adheres to the requested schema for the next action in the Raft cluster. DO NOT include any text, explanations, or commentary outside of the JSON object.
+    Your ONLY task is to interpret the user's command and output a single JSON object that strictly adheres to the requested schema for the next action in the Raft cluster. DO NOT include any text, explanations, or commentary outside of the JSON object.
 
-Schema constraints for the 'command' object:
-- 'type' MUST be one of: "FAIL_LEADER", "FAIL_NODE", "RECOVER_NODE", "SET_KEY", "NO_OP".
-- 'nodeId' is a number and is required ONLY for FAIL_NODE and RECOVER_NODE.
-- 'key' and 'value' are strings and are required ONLY for SET_KEY.
+    Schema constraints for the 'command' object:
+    - 'type' MUST be one of: "FAIL_LEADER", "FAIL_NODE", "RECOVER_NODE", "SET_KEY", "NO_OP".
+    - 'nodeId' is a number and is required ONLY for FAIL_NODE and RECOVER_NODE.
+    - 'key' and 'value' are strings and are required ONLY for SET_KEY.
 
-Examples:
-User: "fail leader" -> JSON: { "command": { "type": "FAIL_LEADER" } }
-User: "fail node 2" -> JSON: { "command": { "type": "FAIL_NODE", "nodeId": 2 } }
-User: "set x to 10" -> JSON: { "command": { "type": "SET_KEY", "key": "x", "value": "10" } }
-User: "hello" -> JSON: { "command": { "type": "NO_OP" } }
+    Examples:
+    User: "fail leader" -> JSON: { "command": { "type": "FAIL_LEADER" } }
+    User: "fail node 2" -> JSON: { "command": { "type": "FAIL_NODE", "nodeId": 2 } }
+    User: "set x to 10" -> JSON: { "command": { "type": "SET_KEY", "key": "x", "value": "10" } }
+    User: "hello" -> JSON: { "command": { "type": "NO_OP" } }
 
----
-This is the current system state. Use it to inform your command choice, but do not reference it in your output.
-${JSON.stringify(filteredOldState)}
-`,
+    ---
+    This is the current system state. Use it to inform your command choice, but do not reference it in your output.
+    ${JSON.stringify(filteredOldState)}
+    `,
       prompt: prompt,
     })
 
@@ -126,21 +149,21 @@ ${JSON.stringify(filteredOldState)}
       model: explanationModel,
       system: `You are a Raft Consensus Algorithm expert and a simulator narrator. Your task is to provide a concise, natural-sounding, and highly informative explanation of what just occurred in the Raft cluster.
 
-Instructions:
-1. **Persona:** Speak as a domain expert describing the outcome of a single action.
-2. **Context:** Use the 'Command Executed', 'Old State', 'New State', and 'LastError' data as *internal knowledge* to construct your explanation. DO NOT explicitly mention the terms "Old State," "New State," "Command Executed," or "LastError" in your response.
-3. **Focus:** Clearly identify the **event**, the **outcome**, and the **Raft mechanism** that caused the transition.
-4. **Tone:** The explanation should be professional, insightful, and flow naturally, directly addressing the user's inquiry (via the 'prompt' in the messages list).
+    Instructions:
+    1. **Persona:** Speak as a domain expert describing the outcome of a single action.
+    2. **Context:** Use the 'Command Executed', 'Old State', 'New State', and 'LastError' data as *internal knowledge* to construct your explanation. DO NOT explicitly mention the terms "Old State," "New State," "Command Executed," or "LastError" in your response.
+    3. **Focus:** Clearly identify the **event**, the **outcome**, and the **Raft mechanism** that caused the transition.
+    4. **Tone:** The explanation should be professional, insightful, and flow naturally, directly addressing the user's inquiry (via the 'prompt' in the messages list).
 
----
-FACTS TO INCORPORATE:
-Command Executed: ${JSON.stringify(parsedAi.command)}
-Old State: ${JSON.stringify(filteredOldState)}
-New State: ${JSON.stringify(this.filterState(newState))}
-${newState.lastError ? `LastError: ${newState.lastError || "none"}` : ""}
----
+    ---
+    FACTS TO INCORPORATE:
+    Command Executed: ${JSON.stringify(parsedAi.command)}
+    Old State: ${JSON.stringify(filteredOldState)}
+    New State: ${JSON.stringify(this.filterState(newState))}
+    ${newState.lastError ? `LastError: ${newState.lastError || "none"}` : ""}
+    ---
 
-Now, based on these facts, explain the changes and answer the user.`,
+    Now, based on these facts, explain the changes and answer the user.`,
       messages: [
         ...lastMessages.map((m) => ({ role: m.role, content: m.content })),
         { role: "user", content: prompt },

@@ -1,19 +1,16 @@
+import type { UIMessage } from "ai"
+
 export interface NodeState {
   id: number
   role: "leader" | "candidate" | "follower" | "dead"
   term: number
 }
 
-export interface ChatMessage {
-  role: "user" | "assistant"
-  content: string
-}
-
 export interface RaftClusterState {
   nodes: NodeState[]
   keyValueStore: Record<string, string>
   lastError: string | null
-  chatHistory: ChatMessage[]
+  chatHistory: UIMessage[]
 }
 
 export type RaftCommandType =

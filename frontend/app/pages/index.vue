@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
 
-const { initSession, startPolling, stopPolling, clusterState, isLoading, isConnected, error, sendMessage, chat } = useRaftSession()
+const raftStore = useRaftStore()
+const { initSession, startPolling, stopPolling, sendMessage } = raftStore
+const { clusterState, isLoading, isConnected, error, chat } = storeToRefs(raftStore)
 
 const isChatSlideoverOpen = ref(false)
 
 onMounted(async () => {
     await initSession()
+    console.log("Chat", chat.value)
     startPolling()
 })
 
@@ -60,18 +64,18 @@ const isMobile = breakpoints.smaller('lg')
 
         </UDashboardPanel>
 
-        <ChatInterface v-if="clusterState && !isMobile" :chat="chat"
-            @send="sendMessage" />
+        <ChatInterface v-if="chat && clusterState && !isMobile" :chat="chat" @send="sendMessage" />
 
         <ClientOnly>
             <USlideover v-if="isMobile" v-model:open="isChatSlideoverOpen" side="bottom">
                 <template #header>
                     <h3 class="text-lg font-semibold w-full">Interactive Assistant</h3>
-                    <UIcon name="i-heroicons-x-mark" class="w-6 h-6 cursor-pointer" @click="isChatSlideoverOpen = false" />
+                    <UIcon name="i-heroicons-x-mark" class="w-6 h-6 cursor-pointer"
+                        @click="isChatSlideoverOpen = false" />
                 </template>
                 <template #body>
-                    <ChatInterface v-if="clusterState" :chat="chat"
-                        @send="sendMessage" @close="isChatSlideoverOpen = false" />
+                    <ChatInterface v-if="clusterState" :chat="chat" @send="sendMessage"
+                        @close="isChatSlideoverOpen = false" />
                 </template>
             </USlideover>
         </ClientOnly>

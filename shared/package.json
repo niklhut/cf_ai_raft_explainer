@@ -8,5 +8,8 @@
   },
   "keywords": [],
   "author": "niklhut",
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.13.1",
+  "dependencies": {
+    "ai": "^5.0.99"
+  }
 }

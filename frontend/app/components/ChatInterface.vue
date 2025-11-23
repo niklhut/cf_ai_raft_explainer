@@ -8,6 +8,10 @@ const props = defineProps<{
   chat: Chat<UIMessage>
 }>()
 
+onMounted(() => {
+  console.log("ChatInterface Chat:", props.chat)
+})
+
 const emit = defineEmits<{
   (e: 'send', message: string): void,
 }>()
@@ -31,7 +35,9 @@ const isMobile = breakpoints.smaller('lg')
     </template>
 
     <template #body>
-      <UChatMessages :messages="chat.messages" :status="chat.status" :should-auto-scroll="true">
+      <UChatMessages :messages="chat.messages" :status="chat.status" :should-auto-scroll="true" :assistant="{
+        variant: 'naked'
+      }">
         <!-- <template #content="{ message }">
           <MDC :value="getTextFromMessage(message)" :cache-key="message.id" class="*:first:mt-0 *:last:mb-0" />
         </template> -->
@@ -40,7 +46,7 @@ const isMobile = breakpoints.smaller('lg')
 
     <template #footer>
       <UContainer class="pb-2 sm:pb-3">
-        <UChatPrompt v-model="input" :error="chat.error" placeholder="Type a command (e.g., 'fail leader')..."
+        <UChatPrompt v-model="input" placeholder="Type a command (e.g., 'fail leader')..."
           @submit="onSubmit">
           <UChatPromptSubmit :status="chat.status" @stop="chat.stop" />
         </UChatPrompt>

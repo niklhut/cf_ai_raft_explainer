@@ -524,3 +524,121 @@ Follow up:
 ```md
 Can we use the ai sdk Chat type to easily be able to access the status of the chat and the messages
 ```
+
+Follow up:
+
+```md
+Ok, this does not update when i switch the session. Maybe it would make sense to rewrite the entire state handling with something more sensible like pinia and then build it from the ground up around the ai sdk types instead of computing them on the fly
+```
+
+Follow up:
+
+```md
+Fix this error: 
+
+ ERROR  [request error] [unhandled] [GET] http://localhost:3000/              8:51:13 PM
+
+ 
+ℹ Error: Cannot stringify arbitrary non-POJOs
+
+ ⁃ at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:201:13)
+
+   196 ┃                                        str = ["${type}",${stringify_string(thing.toString())}];
+   197 ┃                                        break;
+   198 ┃  
+   199 ┃                                default:
+   200 ┃                                        if (!is_plain_object(thing)) {
+ ❯ 201 ┃                                                throw new DevalueError(
+   202 ┃                                                        Cannot stringify arbitrary non-POJOs,
+   203 ┃                                                        keys
+   204 ┃                                                );
+   205 ┃                                        }
+   206 ┃  
+
+ ⁃ at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:61:39)
+ ⁃ at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:61:39)
+ ⁃ at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:229:43)
+ ⁃ at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:229:43)
+ ⁃ at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:61:39)
+ ⁃ at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:229:43)
+ ⁃ at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:61:39)
+ ⁃ at stringify (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:241:16)
+ ⁃ at renderPayloadJsonScript (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/@nuxt+nitro-server@4.2.1_db0@0.3.4_ioredis@5.8.2_magicast@0.5.1_nuxt@4.2.1_@parcel+watc_c59b2403085a1244e1af366d16860836/node_modules/@nuxt/nitro-server/dist/runtime/utils/renderer/payload.js:18:31)
+
+[CAUSE]
+DevalueError {
+  stack: 'Cannot stringify arbitrary non-POJOs\n' +
+  'at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:201:13)\n' +
+  'at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:61:39)\n' +
+  'at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:61:39)\n' +
+  'at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:229:43)\n' +
+  'at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:229:43)\n' +
+  'at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/devalue@5.5.0/node_modules/devalue/src/stringify.js:61:39)\n' +
+  'at flatten (/Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pn'... 659 more characters,
+  message: 'Cannot stringify arbitrary non-POJOs',
+  name: 'DevalueError',
+  path: '.pinia.raft.chat',
+}
+
+Also, the chat type does not match here in index.vue
+
+        <ChatInterface v-if="clusterState && !isMobile" :chat="chat"
+            @send="sendMessage" />
+
+```
+
+Follow up:
+
+```md
+Instead of manually using the local storage, use the pinia-plugin-persistedstate, I already added to nuxt. Currently, I also don't see anything loaded on the reload of the page, but this might already fix that.
+```
+
+New chat:
+
+```md
+Adjust the chat Session endpoint so that it works with the requests sent by the client via the vercel ai sdk. Here is an example body content. Currently calling the endpoint causes a 400 bad request.
+
+{
+  "id": "a6Kw9r898AgDzWgc",
+  "messages": [
+    {
+      "parts": [
+        {
+          "type": "text",
+          "text": "What if the leader fails"
+        }
+      ],
+      "id": "1SZzZYwyeBCJ4mBb",
+      "role": "user"
+    }
+  ],
+  "trigger": "submit-message"
+}
+```
+
+Follow up:
+
+```md
+But it still fails. With this content
+
+{"id":"szGgt8fBMSTUZYfd","messages":[{"parts":[{"type":"text","text":"What if the leader fails"}],"id":"NSSpqWxHQu0sXXu7","role":"user"}],"trigger":"submit-message"}
+
+I still get a 400 bad request with this content
+
+{
+    "errors": [
+        {
+            "code": "invalid_type",
+            "expected": "array",
+            "received": "undefined",
+            "path": [
+                "body",
+                "messages"
+            ],
+            "message": "Required"
+        }
+    ],
+    "success": false,
+    "result": {}
+}
+```
