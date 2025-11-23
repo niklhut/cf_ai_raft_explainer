@@ -152,6 +152,7 @@ export class RaftCluster {
     if (leader) {
       leader.role = "dead"
       console.log(this.clusterState)
+      await this.state.storage.put("clusterState", this.clusterState)
       this.broadcastState()
 
       // Delay before election
@@ -167,10 +168,13 @@ export class RaftCluster {
     if (node) {
       const wasLeader = node.role === "leader"
       node.role = "dead"
+      await this.state.storage.put("clusterState", this.clusterState)
       if (wasLeader) {
         this.broadcastState()
         await new Promise((resolve) => setTimeout(resolve, 1000))
         await this.triggerElection()
+      } else {
+        this.broadcastState()
       }
     }
   }
@@ -180,6 +184,7 @@ export class RaftCluster {
     const node = this.clusterState.nodes.find((n) => n.id === nodeId)
     if (node) {
       node.role = "follower"
+      await this.state.storage.put("clusterState", this.clusterState)
       this.broadcastState()
 
       // Delay before checking for election
@@ -188,6 +193,8 @@ export class RaftCluster {
         await this.triggerElection()
       } else {
         node.term = leader.term
+        await this.state.storage.put("clusterState", this.clusterState)
+        this.broadcastState()
       }
     }
   }
@@ -203,6 +210,8 @@ export class RaftCluster {
       // Simulate delay for consensus
       await new Promise((resolve) => setTimeout(resolve, 1000))
       this.clusterState.keyValueStore[key] = value
+      await this.state.storage.put("clusterState", this.clusterState)
+      this.broadcastState()
     } else if (!leader) {
       this.clusterState.lastError = "No leader available"
     } else if (!majorityAlive) {
@@ -221,6 +230,7 @@ export class RaftCluster {
           n.term += 1
         }
       })
+      await this.state.storage.put("clusterState", this.clusterState)
       this.broadcastState()
 
       // Election timeout simulation
@@ -230,6 +240,8 @@ export class RaftCluster {
       if (aliveNodes.length < Math.ceil(this.clusterState.nodes.length / 2)) {
         console.log("Not enough nodes to elect a leader")
         this.clusterState.lastError = "Not enough nodes to elect a leader"
+        await this.state.storage.put("clusterState", this.clusterState)
+        this.broadcastState()
         return
       }
 
@@ -243,6 +255,8 @@ export class RaftCluster {
       })
       newLeader.role = "leader"
       console.log(aliveNodes)
+      await this.state.storage.put("clusterState", this.clusterState)
+      this.broadcastState()
     }
   }
 }

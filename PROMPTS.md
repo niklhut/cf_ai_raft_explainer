@@ -648,3 +648,31 @@ New chat:
 ```md
 Adjust the workers chat session endpoint and durable object to better work with the types from the ai sdk instead of using custom types. Integrate the cluster changes as a tool call in the agent. The agent should always get the current system state as context and the change cluster state should return the new system state. Changing the state should still work blockingly so the user sees the changes and then gets the explanation. Make sure the frontend works with the new code
 ````
+
+Follow up:
+
+```md
+Thanks. But currently we don't persist the new message the user sends on the durable object, so on a reload there is only the assistant message. Also on the client I get this error and the text is displayed incorrectly after a refresh
+
+[Vue warn]: Invalid prop: type check failed for prop "content". Expected String with value "[object Object]", got Array  
+  at <UChatMessage key=undefined ref_for=true role="assistant"  ... > 
+  at <UChatMessages messages= [{…}] status="ready" should-auto-scroll=true  ... > 
+  at <UDashboardPanel id="chat-panel" > 
+  at <ChatInterface sessionId="d6b496585bedd01d24a29f8f4b27cdda68d7a1992b29cede4035b2d8d8eee223" initialMessages= [{…}] key="d6b496585bedd01d24a29f8f4b27cdda68d7a1992b29cede4035b2d8d8eee223" > 
+  at <Primitive as=undefined class="fixed inset-0 flex overflow-hidden" > 
+  at <UDashboardGroup > 
+  at <Index onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< Proxy(Object) {__v_skip: true} > > 
+  at <RouteProvider key="/" vnode= {__v_isVNode: true, __v_skip: true, type: {…}, props: {…}, key: null, …} route= {fullPath: '/', hash: '', query: {…}, name: 'index', path: '/', …}  ... > 
+  at <RouterView name=undefined route=undefined > 
+  at <NuxtPage > 
+  at <ToastProvider swipe-direction="right" duration=5000 > 
+  at <Toaster key=0 > 
+  at <TooltipProvider > 
+  at <ConfigProvider use-id=fn<use-id> dir=undefined locale=undefined > 
+  at <App > 
+  at <App key=4 > 
+  at <NuxtRoot>
+
+Also, the cluster simulation is not shown on the client and apparently also not persistet on the DO since after a refresh of the page there is no change visible either. 
+While you're at it, maybe adjust the nuxt frontend so each chat has its own uri with the session id and the index page redirects to the latest chat if it exists or creates a new one.
+```

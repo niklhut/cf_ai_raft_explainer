@@ -1,7 +1,15 @@
 <script setup lang="ts">
 const raftStore = useRaftStore()
-const { createSession, switchSession } = raftStore
+const { createSession } = raftStore
 const { savedSessions, sessionId } = storeToRefs(raftStore)
+const router = useRouter()
+
+const handleCreateSession = async () => {
+  await createSession()
+  if (raftStore.sessionId) {
+    router.push(`/chat/${raftStore.sessionId}`)
+  }
+}
 
 const items = computed(() => [
   [
@@ -11,18 +19,14 @@ const items = computed(() => [
       to: '#',
       variant: 'soft' as const,
       color: 'primary' as const,
-      onSelect: () => createSession()
+      onSelect: handleCreateSession
     },
     ...savedSessions.value.toReversed().map(session => ({
       label: session.title ?? "",
       icon: 'i-heroicons-document-text',
-      to: '#',
+      to: `/chat/${session.id}`,
       active: session.id === sessionId.value,
       color: 'neutral' as const,
-      onSelect: () => {
-        console.log(`Switching to session ${session.id}`)
-        switchSession(session.id)
-      }
     })),
   ]
 ])

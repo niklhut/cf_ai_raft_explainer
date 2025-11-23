@@ -9,33 +9,28 @@ const props = defineProps<{
   initialMessages: UIMessage[]
 }>()
 
-const input = ref('')
+console.log("initialMessages for session", props.sessionId, props.initialMessages)
 
+const input = ref('')
 const config = useRuntimeConfig()
 
-const chat = new Chat({
-  messages: props.initialMessages,
-  transport: new TextStreamChatTransport({
-    api: `${config.public.apiBase}/chat/${props.sessionId}`,
-  }),
+const transport = new TextStreamChatTransport({
+  api: `${config.public.apiBase}/chat/${props.sessionId}`,
 })
 
-// Sync messages from props (WS updates)
-watch(() => props.initialMessages, (newMessages) => {
-  if (newMessages && newMessages.length > chat.messages.length) {
-    chat.messages = newMessages
-  }
-}, { deep: true })
-
-const emit = defineEmits<{
-  (e: 'send', message: string): void,
-}>()
+const chat = reactive<Chat<UIMessage>>(new Chat({ messages: props.initialMessages, transport }))
 
 const onSubmit = (e: Event) => {
   const trimmed = input.value.trim()
   if (!trimmed || chat.status === 'streaming') return
   chat.sendMessage({ text: trimmed })
+  input.value = ''
 }
+
+watch(() => props.initialMessages, (newMessages) => {
+  chat.messages = newMessages
+  console.log("Updated chat messages:", chat.messages)
+})
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 const isMobile = breakpoints.smaller('lg')
@@ -48,19 +43,27 @@ const isMobile = breakpoints.smaller('lg')
     </template>
 
     <template #body>
-      <UChatMessages :messages="chat.messages" :status="chat.status" :should-auto-scroll="true" :assistant="{
+      <!-- {{ initialMessages }} -->
+      <!-- {{ chat.messages }} -->
+      <UChatMessages v-if="chat" :messages="chat.messages" :status="chat.status" :should-auto-scroll="true" :assistant="{
         variant: 'naked'
       }">
-        <!-- <template #content="{ message }">
-          <MDC :value="getTextFromMessage(message)" :cache-key="message.id" class="*:first:mt-0 *:last:mb-0" />
-        </template> -->
+        <template #content="{ message }">
+          {{ message }}
+          <div v-if="message.role === 'user'">
+            {{ getTextFromMessage(message) }}
+          </div>
+          <div v-else>
+            <MDC :value="getTextFromMessage(message)" :cache-key="message.id" class="*:first:mt-0 *:last:mb-0" />
+          </div>
+        </template>
       </UChatMessages>
     </template>
 
     <template #footer>
       <UContainer class="pb-2 sm:pb-3">
         <UChatPrompt v-model="input" placeholder="Type a command (e.g., 'fail leader')..." @submit="onSubmit">
-          <UChatPromptSubmit :status="chat.status" @stop="chat.stop" />
+          <UChatPromptSubmit v-if="chat" :status="chat.status" @stop="chat.stop" />
         </UChatPrompt>
       </UContainer>
     </template>

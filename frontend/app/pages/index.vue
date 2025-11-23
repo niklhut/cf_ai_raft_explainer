@@ -1,82 +1,26 @@
 <script setup lang="ts">
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
-import { storeToRefs } from 'pinia'
-
 const raftStore = useRaftStore()
-const { initSession, startPolling, stopPolling } = raftStore
-const { clusterState, isLoading, isConnected, error, sessionId } = storeToRefs(raftStore)
-
-const isChatSlideoverOpen = ref(false)
+const { createSession } = raftStore
+const { savedSessions } = storeToRefs(raftStore)
+const router = useRouter()
 
 onMounted(async () => {
-    await initSession()
-    startPolling()
+    if (savedSessions.value.length > 0) {
+        const lastSession = savedSessions.value[savedSessions.value.length - 1]
+        if (lastSession) {
+            router.push(`/chat/${lastSession.id}`)
+        }
+    } else {
+        await createSession()
+        if (raftStore.sessionId) {
+            router.push(`/chat/${raftStore.sessionId}`)
+        }
+    }
 })
-
-onUnmounted(() => {
-    stopPolling()
-})
-
-const breakpoints = useBreakpoints(breakpointsTailwind)
-const isMobile = breakpoints.smaller('lg')
 </script>
 
 <template>
-    <UDashboardGroup>
-        <Sidebar />
-
-        <UDashboardPanel id="main-panel" :default-size="50" :min-size="40" :max-size="60" resizable>
-            <template #header>
-                <UDashboardNavbar title="Raft Simulation">
-                    <template #leading>
-                        <UDashboardSidebarCollapse />
-                    </template>
-                    <template #right>
-                        <UBadge v-if="isLoading" color="warning" variant="subtle">Syncing...</UBadge>
-                        <UBadge v-else-if="!isConnected" color="warning" variant="subtle">Connecting...</UBadge>
-                        <UBadge v-else color="success" variant="subtle">Connected</UBadge>
-                    </template>
-                </UDashboardNavbar>
-            </template>
-
-
-            <template #body>
-                <div v-if="clusterState">
-                    <h2 class="text-xl font-bold mb-4">Cluster Visualization (Term: {{clusterState.nodes.find(n =>
-                        n.role === 'leader')?.term}})</h2>
-                    <NodeVisualization :nodes="clusterState.nodes" />
-
-                    <div class="mt-8">
-                        <StateTable :data="clusterState.keyValueStore" />
-                    </div>
-                </div>
-                <div v-else class="flex items-center justify-center h-64">
-                    <UIcon name="i-heroicons-arrow-path" class="animate-spin w-8 h-8 text-gray-400" />
-                </div>
-
-                <ClientOnly>
-                    <template v-if="isMobile">
-                        <UButton color="primary" @click="isChatSlideoverOpen = true">Open Chat Assistant</UButton>
-                    </template>
-                </ClientOnly>
-            </template>
-
-        </UDashboardPanel>
-
-        <ChatInterface v-if="sessionId && clusterState && !isMobile" :sessionId="sessionId" :initialMessages="clusterState.chatHistory" :key="sessionId" />
-
-        <ClientOnly>
-            <USlideover v-if="isMobile" v-model:open="isChatSlideoverOpen" side="bottom">
-                <template #header>
-                    <h3 class="text-lg font-semibold w-full">Interactive Assistant</h3>
-                    <UIcon name="i-heroicons-x-mark" class="w-6 h-6 cursor-pointer"
-                        @click="isChatSlideoverOpen = false" />
-                </template>
-                <template #body>
-                    <ChatInterface v-if="sessionId && clusterState" :sessionId="sessionId" :initialMessages="clusterState.chatHistory" :key="sessionId"
-                        @close="isChatSlideoverOpen = false" />
-                </template>
-            </USlideover>
-        </ClientOnly>
-    </UDashboardGroup>
+    <div class="flex items-center justify-center h-screen">
+        <UIcon name="i-heroicons-arrow-path" class="animate-spin w-8 h-8 text-gray-400" />
+    </div>
 </template>

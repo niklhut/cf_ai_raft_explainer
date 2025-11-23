@@ -77,6 +77,16 @@ export class ChatSession extends OpenAPIRoute {
     const oldState = (await oldStateRes.json()) as RaftClusterState
     const filteredOldState = this.filterState(oldState)
 
+    // Persist user message
+    const lastUserMessage = messages[messages.length - 1]
+    if (lastUserMessage && lastUserMessage.role === "user") {
+      await stub.fetch("https://dummy/addHistory", {
+        method: "POST",
+        body: JSON.stringify({ messages: [lastUserMessage] }),
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
     const changeClusterStateTool = tool({
       description:
         "A tool used to simulate an event or command in the Raft cluster, such as failing a node, recovering a node, or setting a key/value. Use this tool when the user requests an action that changes the cluster state.",

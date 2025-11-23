@@ -1,8 +1,6 @@
-import { defineStore, skipHydrate } from "pinia"
+import { defineStore } from "pinia"
 import type { RaftClusterState } from "@raft-simulator/shared"
 import type { SavedSession } from "~/utils/types"
-import { Chat } from "@ai-sdk/vue"
-import { TextStreamChatTransport, type UIMessage } from "ai"
 
 export const useRaftStore = defineStore(
   "raft",
@@ -18,12 +16,9 @@ export const useRaftStore = defineStore(
     const isConnected = ref(false)
     const error = ref<string | null>(null)
 
-
     // WebSocket
     let ws: WebSocket | null = null
     let reconnectInterval: any = null
-
-
 
     const fetchState = async () => {
       if (!sessionId.value) return
@@ -122,12 +117,6 @@ export const useRaftStore = defineStore(
           console.log("Initializing existing session", sessionId.value)
           await fetchState()
           console.log("Cluster State:", clusterState.value)
-        } else if (savedSessions.value.length > 0) {
-          sessionId.value =
-            savedSessions.value[savedSessions.value.length - 1]!.id
-          await fetchState()
-        } else {
-          await createSession()
         }
       }
     }
@@ -147,8 +136,7 @@ export const useRaftStore = defineStore(
 
     const stopPolling = () => {
       if (ws) {
-        ws.close()
-        ws = null
+        closeWebSocket()
       }
       if (reconnectInterval) {
         clearInterval(reconnectInterval)
