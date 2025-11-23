@@ -2,7 +2,7 @@
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 import { Chat } from '@ai-sdk/vue'
-import { DefaultChatTransport, TextStreamChatTransport, type UIMessage } from "ai"
+import { DefaultChatTransport, type UIMessage } from "ai"
 
 const config = useRuntimeConfig()
 
@@ -11,20 +11,36 @@ const { clusterState } = storeToRefs(clusterStore)
 
 const input = ref("")
 
-const chat = shallowRef<Chat<UIMessage>>(new Chat({}))
+const chat = shallowRef<Chat<UIMessage> | null>(null)
+const activeSessionId = ref<string | null>(null)
 
-watch(clusterState, (state) => {
-  if (!state?.id) return
+watch(() => clusterState.value?.id, (sessionId) => {
+  if (!sessionId) {
+    chat.value = null
+    activeSessionId.value = null
+    return
+  }
 
-  const t = new DefaultChatTransport({
-    api: `${config.public.apiBase}/chat/${state.id}`,
+  if (sessionId === activeSessionId.value && chat.value) return
+
+  const transport = new DefaultChatTransport({
+    api: `${config.public.apiBase}/chat/${sessionId}`,
   })
 
   chat.value = new Chat({
-    transport: t,
-    messages: state.chatHistory ?? [],
+    transport,
+    messages: clusterState.value?.chatHistory ?? [],
   })
+
+  activeSessionId.value = sessionId
 }, { immediate: true })
+
+watch(() => clusterState.value?.chatHistory, (history) => {
+  if (!chat.value || !history) return
+  if (chat.value.status === "streaming") return
+
+  chat.value.messages = history
+})
 
 const onSubmit = () => {
   const trimmed = input.value.trim()

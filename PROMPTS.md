@@ -739,3 +739,24 @@ Node 3 is a follower in term 2.
 Node 4 is the leader in term 2.
 Node 5 is a follower in term 2. The key-value store contains the key "config" with value "x".
 ```
+
+New chat:
+
+```md
+The response streaming works from the server side, I can also see the packets arrive on the client:
+
+data: {"type":"start"}
+
+data: {"type":"start-step"}
+
+data: {"type":"text-start","id":"zz8ArgGrMLDawLCG"}
+
+data: {"type":"tool-input-available","toolCallId":"EvQdVYoYRHJ6E3Qj","toolName":"changeClusterState","input":{"command":{"type":"FAIL_LEADER"}}}
+
+data: {"type":"text-end","id":"zz8ArgGrMLDawLCG"}
+
+data: {"type":"tool-output-available","toolCallId":"EvQdVYoYRHJ6E3Qj","output":{"nodes":[{"id":1,"role":"follower","term":2},{"id":2,"role":"follower","term":2},{"id":3,"role":"follower","term":2},{"id":4,"role":"leader","term":2},{"id":5,"role":"dead","term":1}],"keyValueStore":{}}}
+
+
+However, the Cgat Interface UI does not update on these changes and the onData hook does not log the parts either. Why? Can you fix it?
+```
