@@ -34,6 +34,7 @@ export class ChatSession extends OpenAPIRoute {
                     parts: z.array(z.any()).optional(),
                   }),
                 ),
+                model: z.string().optional(),
               })
               .passthrough(),
           },
@@ -65,7 +66,7 @@ export class ChatSession extends OpenAPIRoute {
   async handle(c: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>()
     const { sessionId } = data.params
-    const { messages } = data.body
+    const { messages, model: modelId } = data.body
 
     if (c.env.RATE_LIMITER) {
       const ip = c.req.header("CF-Connecting-IP") || "unknown"
@@ -75,11 +76,19 @@ export class ChatSession extends OpenAPIRoute {
       }
     }
 
-    const workersai = createWorkersAI({ binding: c.env.AI })
-    const model = workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast" as any)
-    // const apiKey = c.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    // const google = createGoogleGenerativeAI({ apiKey })
-    // const model = google("gemini-2.5-flash-lite")
+    let model
+    if (modelId && modelId.startsWith("gemini")) {
+      const apiKey = c.env.GOOGLE_GENERATIVE_AI_API_KEY
+      if (!apiKey) {
+        return c.text("Gemini API key not configured", 400)
+      }
+      const google = createGoogleGenerativeAI({ apiKey })
+      model = google(modelId)
+    } else {
+      const workersai = createWorkersAI({ binding: c.env.AI })
+      model = workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast" as any)
+    }
+    console.log("Using model:", model)
 
     const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
     const stub = c.env.RAFT_CLUSTER.get(id)

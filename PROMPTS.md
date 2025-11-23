@@ -760,3 +760,46 @@ data: {"type":"tool-output-available","toolCallId":"EvQdVYoYRHJ6E3Qj","output":{
 
 However, the Cgat Interface UI does not update on these changes and the onData hook does not log the parts either. Why? Can you fix it?
 ```
+
+New chat:
+
+```md
+I want to be able to switch between different AI models, namely the existing llama model and gemini 2.5 flash and flash lite. Adjust the worker to have one api to list all available models (also check if the gemini api key is set, otherwise don't return the google models) and then adjust the chat handler on the client and server to work with the model selection. For the model selection ui use this component from the nuxt ui examples
+
+<script setup lang="ts">
+const { model, models } = useModels()
+
+const items = computed(() => models.map(model => ({
+  label: model,
+  value: model,
+  icon: `i-simple-icons-${model.split('/')[0]}`
+})))
+</script>
+
+<template>
+  <USelectMenu
+    v-model="model"
+    :items="items"
+    :icon="`i-simple-icons-${model.split('/')[0]}`"
+    variant="ghost"
+    value-key="value"
+    class="hover:bg-default focus:bg-default data-[state=open]:bg-default"
+    :ui="{
+      trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
+    }"
+  />
+</template>
+
+and embed it in the chat prompt footer:
+
+ <template #footer>
+            <ModelSelect v-model="model" />
+          </template>
+        </UChatPrompt>
+```
+
+Follow up:
+
+```md
+Thanks. Also add a readyble name i can specify on the server which is shown in the ui instead of the long model name
+```

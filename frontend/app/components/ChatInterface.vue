@@ -5,6 +5,7 @@ import { Chat } from '@ai-sdk/vue'
 import { DefaultChatTransport, type UIMessage } from "ai"
 
 const config = useRuntimeConfig()
+const { model } = useModels()
 
 const clusterStore = useClusterStore()
 const { clusterState } = storeToRefs(clusterStore)
@@ -25,6 +26,14 @@ watch(() => clusterState.value?.id, (sessionId) => {
 
   const transport = new DefaultChatTransport({
     api: `${config.public.apiBase}/chat/${sessionId}`,
+    fetch: (input, init) => {
+      if (init && init.method === "POST" && init.body) {
+        const body = JSON.parse(init.body as string)
+        body.model = model.value
+        init.body = JSON.stringify(body)
+      }
+      return fetch(input, init)
+    }
   })
 
   chat.value = new Chat({
@@ -73,6 +82,9 @@ const isMobile = breakpoints.smaller('lg')
       <UContainer class="pb-2 sm:pb-3">
         <UChatPrompt v-model="input" placeholder="Type a command (e.g., 'fail leader')..." @submit="onSubmit">
           <UChatPromptSubmit v-if="chat" :status="chat.status" @stop="chat.stop" />
+          <template #footer>
+            <ModelSelect />
+          </template>
         </UChatPrompt>
       </UContainer>
     </template>
