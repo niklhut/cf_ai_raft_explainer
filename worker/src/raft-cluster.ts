@@ -1,4 +1,4 @@
-import { UIDataTypes, UIMessage, UITool } from "ai"
+import { ModelMessage, UIDataTypes, UIMessage, UITool } from "ai"
 import type { Env } from "./types"
 import type {
   NodeState,
@@ -26,6 +26,7 @@ export class RaftCluster {
         })
       }
       this.clusterState = stored || {
+        id: state.id.toString(),
         nodes: nodes,
         keyValueStore: {},
         chatHistory: [],

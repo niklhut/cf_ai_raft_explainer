@@ -4,33 +4,41 @@ import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 import { Chat } from '@ai-sdk/vue'
 import { TextStreamChatTransport, type UIMessage } from "ai"
 
-const props = defineProps<{
-  sessionId: string
-  initialMessages: UIMessage[]
-}>()
-
-console.log("initialMessages for session", props.sessionId, props.initialMessages)
-
-const input = ref('')
 const config = useRuntimeConfig()
 
+const clusterStore = useClusterStore()
+const { clusterState } = storeToRefs(clusterStore)
+
+const input = ref("")
+
 const transport = new TextStreamChatTransport({
-  api: `${config.public.apiBase}/chat/${props.sessionId}`,
+  api: `${config.public.apiBase}/chat/${clusterState.value?.id}`,
 })
 
-const chat = reactive<Chat<UIMessage>>(new Chat({ messages: props.initialMessages, transport }))
+const chat = shallowRef<Chat<UIMessage> | null>(null)
 
-const onSubmit = (e: Event) => {
+watch(clusterState, (state) => {
+  if (!state?.id) return
+
+  const t = new TextStreamChatTransport({
+    api: `${config.public.apiBase}/chat/${state.id}`,
+  })
+
+  chat.value = new Chat({
+    transport: t,
+    messages: state.chatHistory ?? [],
+  })
+}, { immediate: true })
+
+
+const onSubmit = () => {
   const trimmed = input.value.trim()
-  if (!trimmed || chat.status === 'streaming') return
-  chat.sendMessage({ text: trimmed })
-  input.value = ''
+  if (trimmed === "" || !chat.value) return
+  chat.value.sendMessage({
+    text: trimmed,
+  })
+  input.value = ""
 }
-
-watch(() => props.initialMessages, (newMessages) => {
-  chat.messages = newMessages
-  console.log("Updated chat messages:", chat.messages)
-})
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 const isMobile = breakpoints.smaller('lg')
@@ -43,19 +51,9 @@ const isMobile = breakpoints.smaller('lg')
     </template>
 
     <template #body>
-      <!-- {{ initialMessages }} -->
-      <!-- {{ chat.messages }} -->
-      <UChatMessages v-if="chat" :messages="chat.messages" :status="chat.status" :should-auto-scroll="true" :assistant="{
-        variant: 'naked'
-      }">
+      <UChatMessages v-if="chat" :messages="chat.messages" :status="chat.status">
         <template #content="{ message }">
-          {{ message }}
-          <div v-if="message.role === 'user'">
-            {{ getTextFromMessage(message) }}
-          </div>
-          <div v-else>
-            <MDC :value="getTextFromMessage(message)" :cache-key="message.id" class="*:first:mt-0 *:last:mb-0" />
-          </div>
+          <MDC :value="getTextFromMessage(message)" :cache-key="message.id" class="*:first:mt-0 *:last:mb-0" />
         </template>
       </UChatMessages>
     </template>

@@ -7,6 +7,7 @@ export interface NodeState {
 }
 
 export interface RaftClusterState {
+  id: string
   nodes: NodeState[]
   keyValueStore: Record<string, string>
   lastError: string | null

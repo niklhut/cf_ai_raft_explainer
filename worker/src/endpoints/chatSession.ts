@@ -3,7 +3,14 @@ import { z } from "zod"
 import type { AppContext } from "../types"
 import type { RaftClusterState } from "@raft-simulator/shared"
 import { createWorkersAI } from "workers-ai-provider"
-import { convertToModelMessages, stepCountIs, streamText, tool, UIMessage } from "ai"
+import {
+  convertToModelMessages,
+  generateId,
+  stepCountIs,
+  streamText,
+  tool,
+  UIMessage,
+} from "ai"
 
 export class ChatSession extends OpenAPIRoute {
   schema = {
@@ -78,7 +85,10 @@ export class ChatSession extends OpenAPIRoute {
     const filteredOldState = this.filterState(oldState)
 
     // Persist user message
-    const lastUserMessage = messages[messages.length - 1]
+    const lastUserMessage = {
+      ...messages[messages.length - 1],
+      id: generateId(),
+    } as UIMessage
     if (lastUserMessage && lastUserMessage.role === "user") {
       await stub.fetch("https://dummy/addHistory", {
         method: "POST",
@@ -141,22 +151,34 @@ Instructions:
       tools: {
         changeClusterState: changeClusterStateTool,
       },
-      onFinish: async ({ response }) => {
+      stopWhen: stepCountIs(5),
+      onChunk: async (chunk) => {
+        console.log("Chunk:", chunk)
+      },
+      onFinish: async ({ text, toolCalls, toolResults }) => {
+        console.log("Finished", text, toolCalls, toolResults)
+        const assistantMessage: UIMessage = {
+          id: generateId(),
+          role: "assistant",
+          parts: [{ type: "text", text }],
+        }
+
         await stub.fetch("https://dummy/addHistory", {
           method: "POST",
-          body: JSON.stringify({ messages: response.messages }),
+          body: JSON.stringify({ messages: [assistantMessage] }),
           headers: { "Content-Type": "application/json" },
         })
       },
-      stopWhen: stepCountIs(5)
     })
 
-    return result.toTextStreamResponse({
-      headers: {
-        "Content-Type": "text/x-unknown",
-        "content-encoding": "identity",
-        "transfer-encoding": "chunked",
-      },
-    })
+    // return result.toUIMessageStreamResponse({
+    //   headers: {
+    //     "Content-Type": "text/x-unknown",
+    //     "content-encoding": "identity",
+    //     "transfer-encoding": "chunked",
+    //   },
+    // })
+
+    return result.toUIMessageStreamResponse()
   }
 }

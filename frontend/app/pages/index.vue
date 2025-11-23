@@ -1,7 +1,7 @@
 <script setup lang="ts">
-const raftStore = useRaftStore()
-const { createSession } = raftStore
-const { savedSessions } = storeToRefs(raftStore)
+const sessionStore = useSessionStore()
+const { createSession } = sessionStore
+const { savedSessions, sessionId } = storeToRefs(sessionStore)
 const router = useRouter()
 
 onMounted(async () => {
@@ -11,9 +11,9 @@ onMounted(async () => {
             router.push(`/chat/${lastSession.id}`)
         }
     } else {
-        await createSession()
-        if (raftStore.sessionId) {
-            router.push(`/chat/${raftStore.sessionId}`)
+        const newSessionId = await createSession()
+        if (newSessionId) {
+            router.push(`/chat/${newSessionId}`)
         }
     }
 })

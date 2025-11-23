@@ -1,13 +1,14 @@
 <script setup lang="ts">
-const raftStore = useRaftStore()
-const { createSession } = raftStore
-const { savedSessions, sessionId } = storeToRefs(raftStore)
+
+const sessionStore = useSessionStore()
+const { createSession } = sessionStore
+const { savedSessions, sessionId } = storeToRefs(sessionStore)
 const router = useRouter()
 
 const handleCreateSession = async () => {
   await createSession()
-  if (raftStore.sessionId) {
-    router.push(`/chat/${raftStore.sessionId}`)
+  if (sessionId.value) {
+    router.push(`/chat/${sessionId.value}`)
   }
 }
 
