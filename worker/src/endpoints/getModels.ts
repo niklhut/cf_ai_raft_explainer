@@ -34,10 +34,10 @@ export class GetModels extends OpenAPIRoute {
     ]
 
     if (c.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      models.push({ id: "gemini-2.0-flash", name: "Gemini 2.0 Flash" })
+      models.push({ id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" })
       models.push({
-        id: "gemini-2.0-flash-lite-preview-02-05",
-        name: "Gemini 2.0 Flash Lite",
+        id: "gemini-2.5-flash-lite",
+        name: "Gemini 2.5 Flash Lite",
       })
     }
 
