@@ -3,7 +3,7 @@ import { z } from "zod"
 import type { AppContext } from "../types"
 import type { RaftClusterState } from "@raft-simulator/shared"
 import { createWorkersAI } from "workers-ai-provider"
-import { generateObject, streamText } from "ai"
+import { streamText, tool } from "ai"
 
 export class ChatSession extends OpenAPIRoute {
   schema = {
@@ -22,14 +22,7 @@ export class ChatSession extends OpenAPIRoute {
                   z.object({
                     role: z.string(),
                     content: z.string().optional(),
-                    parts: z
-                      .array(
-                        z.object({
-                          type: z.string(),
-                          text: z.string(),
-                        }),
-                      )
-                      .optional(),
+                    parts: z.array(z.any()).optional(),
                   }),
                 ),
               })
@@ -52,23 +45,18 @@ export class ChatSession extends OpenAPIRoute {
     },
   }
 
-  filterState(s: RaftClusterState) {
+  filterState(s: RaftClusterState, includeLastError = false) {
     return {
       nodes: s.nodes,
       keyValueStore: s.keyValueStore,
+      ...(includeLastError && s.lastError ? { lastError: s.lastError } : {}),
     }
   }
 
   async handle(c: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>()
-    console.log("Data:", data)
     const { sessionId } = data.params
     const { messages } = data.body
-    const lastMessage = messages[messages.length - 1]
-    const prompt =
-      lastMessage.content ||
-      lastMessage.parts?.map((p) => p.text).join("") ||
-      ""
 
     if (c.env.RATE_LIMITER) {
       const ip = c.req.header("CF-Connecting-IP") || "unknown"
@@ -79,10 +67,7 @@ export class ChatSession extends OpenAPIRoute {
     }
 
     const workersai = createWorkersAI({ binding: c.env.AI })
-    const actionModel = workersai("@cf/meta/llama-3-8b-instruct")
-    const explanationModel = workersai(
-      "@cf/meta/llama-4-scout-17b-16e-instruct" as any,
-    )
+    const model = workersai("@cf/meta/llama-3.1-8b-instruct" as any)
 
     const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
     const stub = c.env.RAFT_CLUSTER.get(id)
@@ -92,100 +77,68 @@ export class ChatSession extends OpenAPIRoute {
     const oldState = (await oldStateRes.json()) as RaftClusterState
     const filteredOldState = this.filterState(oldState)
 
-    console.log("Old State:", filteredOldState)
-
-    // Get Command from AI
-    const { object: parsedAi } = await generateObject({
-      model: actionModel,
-      schema: z.object({
+    const changeClusterStateTool = tool({
+      description:
+        "A tool used to simulate an event or command in the Raft cluster, such as failing a node, recovering a node, or setting a key/value. Use this tool when the user requests an action that changes the cluster state.",
+      inputSchema: z.object({
         command: z.object({
-          type: z.enum([
-            "FAIL_LEADER",
-            "FAIL_NODE",
-            "RECOVER_NODE",
-            "SET_KEY",
-            "NO_OP",
-          ]),
-          nodeId: z.number().optional(),
-          key: z.string().optional(),
-          value: z.string().optional(),
+          type: z
+            .enum(["FAIL_LEADER", "FAIL_NODE", "RECOVER_NODE", "SET_KEY"])
+            .describe(
+              "The specific type of Raft simulation command to execute.",
+            ),
+          nodeId: z
+            .number()
+            .optional()
+            .describe(
+              "The ID of the node (e.g., 1, 2, 3) to target. Required for FAIL_NODE and RECOVER_NODE.",
+            ),
+          key: z
+            .string()
+            .optional()
+            .describe("The key name for SET_KEY commands."),
+          value: z
+            .string()
+            .optional()
+            .describe(
+              "The value to associate with the key for SET_KEY commands, empty if key should be deleted.",
+            ),
         }),
       }),
-      system: `You are a Raft Consensus Algorithm simulator assistant.
-
-    Your ONLY task is to interpret the user's command and output a single JSON object that strictly adheres to the requested schema for the next action in the Raft cluster. DO NOT include any text, explanations, or commentary outside of the JSON object.
-
-    Schema constraints for the 'command' object:
-    - 'type' MUST be one of: "FAIL_LEADER", "FAIL_NODE", "RECOVER_NODE", "SET_KEY", "NO_OP".
-    - 'nodeId' is a number and is required ONLY for FAIL_NODE and RECOVER_NODE.
-    - 'key' and 'value' are strings and are required ONLY for SET_KEY.
-
-    Examples:
-    User: "fail leader" -> JSON: { "command": { "type": "FAIL_LEADER" } }
-    User: "fail node 2" -> JSON: { "command": { "type": "FAIL_NODE", "nodeId": 2 } }
-    User: "set x to 10" -> JSON: { "command": { "type": "SET_KEY", "key": "x", "value": "10" } }
-    User: "hello" -> JSON: { "command": { "type": "NO_OP" } }
-
-    ---
-    This is the current system state. Use it to inform your command choice, but do not reference it in your output.
-    ${JSON.stringify(filteredOldState)}
-    `,
-      prompt: prompt,
+      execute: async ({ command }) => {
+        const res = await stub.fetch("https://dummy/execute", {
+          method: "POST",
+          body: JSON.stringify({ command }),
+        })
+        const newState = (await res.json()) as RaftClusterState
+        return this.filterState(newState, true)
+      },
     })
-
-    console.log("LLM response for command:", parsedAi)
-
-    // 3. Execute Command
-    const executeRes = await stub.fetch("https://dummy/execute", {
-      method: "POST",
-      body: JSON.stringify({ command: parsedAi.command }),
-      headers: { "Content-Type": "application/json" },
-    })
-    const newState = (await executeRes.json()) as RaftClusterState
-
-    const lastMessages = oldState.chatHistory.slice(-5)
 
     const result = streamText({
-      model: explanationModel,
-      system: `You are a Raft Consensus Algorithm expert and a simulator narrator. Your task is to provide a concise, natural-sounding, and highly informative explanation of what just occurred in the Raft cluster.
+      model,
+      system: `You are a Raft Consensus Algorithm expert and a simulator narrator.
+You have access to the 'changeClusterState' tool to simulate events.
 
-    Instructions:
-    1. **Persona:** Speak as a domain expert describing the outcome of a single action.
-    2. **Context:** Use the 'Command Executed', 'Old State', 'New State', and 'LastError' data as *internal knowledge* to construct your explanation. DO NOT explicitly mention the terms "Old State," "New State," "Command Executed," or "LastError" in your response.
-    3. **Focus:** Clearly identify the **event**, the **outcome**, and the **Raft mechanism** that caused the transition.
-    4. **Tone:** The explanation should be professional, insightful, and flow naturally, directly addressing the user's inquiry (via the 'prompt' in the messages list).
+Current Raft Cluster State: ${JSON.stringify(filteredOldState)}
 
-    ---
-    FACTS TO INCORPORATE:
-    Command Executed: ${JSON.stringify(parsedAi.command)}
-    Old State: ${JSON.stringify(filteredOldState)}
-    New State: ${JSON.stringify(this.filterState(newState))}
-    ${newState.lastError ? `LastError: ${newState.lastError || "none"}` : ""}
-    ---
-
-    Now, based on these facts, explain the changes and answer the user.`,
-      messages: [
-        ...lastMessages.map((m) => ({ role: m.role, content: m.content })),
-        { role: "user", content: prompt },
-      ],
-      onFinish: async ({ text }) => {
-        console.log("LLM explanation:", text)
-        // 5. Add History (Async)
+Instructions:
+1. When the user requests an action (e.g., 'fail node 3', 'set x=10'), you MUST use the 'changeClusterState' tool with the correct parameters.
+2. After the tool returns the new cluster state, use your expertise to provide a detailed, insightful, and concise explanation of what happened in the cluster based on the change (e.g., 'Node 2 was elected leader in term 5 due to the failure of the previous leader').
+3. If the user asks a theoretical question, answer it directly using your knowledge and the Current Cluster State as context.`,
+      messages: messages as any,
+      tools: {
+        changeClusterState: changeClusterStateTool,
+      },
+      onFinish: async ({ response }) => {
         await stub.fetch("https://dummy/addHistory", {
           method: "POST",
-          body: JSON.stringify({ prompt, explanation: text }),
+          body: JSON.stringify({ messages: response.messages }),
           headers: { "Content-Type": "application/json" },
         })
       },
     })
 
-    // Return the stream response
-    return result.toTextStreamResponse({
-      headers: {
-        "Content-Type": "text/x-unknown",
-        "content-encoding": "identity",
-        "transfer-encoding": "chunked",
-      },
-    })
+    return (result as any).toDataStreamResponse()
   }
 }

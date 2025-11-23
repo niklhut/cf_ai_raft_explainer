@@ -3,14 +3,13 @@ import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 
 const raftStore = useRaftStore()
-const { initSession, startPolling, stopPolling, sendMessage } = raftStore
-const { clusterState, isLoading, isConnected, error, chat } = storeToRefs(raftStore)
+const { initSession, startPolling, stopPolling } = raftStore
+const { clusterState, isLoading, isConnected, error, sessionId } = storeToRefs(raftStore)
 
 const isChatSlideoverOpen = ref(false)
 
 onMounted(async () => {
     await initSession()
-    console.log("Chat", chat.value)
     startPolling()
 })
 
@@ -64,7 +63,7 @@ const isMobile = breakpoints.smaller('lg')
 
         </UDashboardPanel>
 
-        <ChatInterface v-if="chat && clusterState && !isMobile" :chat="chat" @send="sendMessage" />
+        <ChatInterface v-if="sessionId && clusterState && !isMobile" :sessionId="sessionId" :initialMessages="clusterState.chatHistory" :key="sessionId" />
 
         <ClientOnly>
             <USlideover v-if="isMobile" v-model:open="isChatSlideoverOpen" side="bottom">
@@ -74,7 +73,7 @@ const isMobile = breakpoints.smaller('lg')
                         @click="isChatSlideoverOpen = false" />
                 </template>
                 <template #body>
-                    <ChatInterface v-if="clusterState" :chat="chat" @send="sendMessage"
+                    <ChatInterface v-if="sessionId && clusterState" :sessionId="sessionId" :initialMessages="clusterState.chatHistory" :key="sessionId"
                         @close="isChatSlideoverOpen = false" />
                 </template>
             </USlideover>

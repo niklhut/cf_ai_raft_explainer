@@ -59,10 +59,6 @@ export class RaftCluster {
       return this.handleAddHistory(request)
     }
 
-    if (url.pathname === "/chat") {
-      return this.handleChat(request)
-    }
-
     return new Response("Not found", { status: 404 })
   }
 
@@ -116,15 +112,10 @@ export class RaftCluster {
   }
 
   async handleAddHistory(request: Request) {
-    const { parts, explanation } = (await request.json()) as {
-      parts: UIMessage[]
-      explanation: string
+    const { messages } = (await request.json()) as {
+      messages: UIMessage[]
     }
-    this.clusterState.chatHistory.push(...parts)
-    this.clusterState.chatHistory.push({
-      role: "assistant",
-      parts: explanation
-    })
+    this.clusterState.chatHistory.push(...messages)
     await this.state.storage.put("clusterState", this.clusterState)
     this.broadcastState()
     return new Response(JSON.stringify({ success: true }), {
@@ -132,39 +123,6 @@ export class RaftCluster {
     })
   }
 
-  async handleChat(request: Request) {
-    this.clusterState.lastError = null // Reset error on new chat command
-    try {
-      const { prompt, command, explanation } = (await request.json()) as {
-        prompt: string
-        command: RaftCommand
-        explanation: string
-      }
-
-      // 1. Update Chat History immediately
-      this.clusterState.chatHistory.push({ role: "user", content: prompt })
-      this.clusterState.chatHistory.push({
-        role: "assistant",
-        content: explanation,
-      })
-      await this.state.storage.put("clusterState", this.clusterState)
-      this.broadcastState()
-
-      // 2. Execute Simulation Logic (Async with delays)
-      this.state.waitUntil(this.executeCommand(command))
-
-      return new Response(
-        JSON.stringify({ success: true }), // State will be pushed via WS
-        {
-          headers: { "Content-Type": "application/json" },
-        },
-      )
-    } catch (error) {
-      return new Response(JSON.stringify({ error: (error as Error).message }), {
-        status: 500,
-      })
-    }
-  }
 
   private async executeCommand(command: RaftCommand) {
     switch (command.type) {
@@ -180,7 +138,6 @@ export class RaftCluster {
       case "SET_KEY":
         if (command.key) await this.setKey(command.key, command.value)
         break
-      case "NO_OP":
       default:
         // Do nothing
         break

@@ -642,3 +642,9 @@ I still get a 400 bad request with this content
     "result": {}
 }
 ```
+
+New chat:
+
+```md
+Adjust the workers chat session endpoint and durable object to better work with the types from the ai sdk instead of using custom types. Integrate the cluster changes as a tool call in the agent. The agent should always get the current system state as context and the change cluster state should return the new system state. Changing the state should still work blockingly so the user sees the changes and then gets the explanation. Make sure the frontend works with the new code
+````

@@ -1,27 +1,35 @@
 <script setup lang="ts">
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { getTextFromMessage } from '@nuxt/ui/utils/ai'
-import type { Chat } from "@ai-sdk/vue"
+import { Chat } from '@ai-sdk/vue'
 import type { UIMessage } from "ai"
 
 const props = defineProps<{
-  chat: Chat<UIMessage>
+  sessionId: string
+  initialMessages: UIMessage[]
 }>()
 
-onMounted(() => {
-  console.log("ChatInterface Chat:", props.chat)
+const config = useRuntimeConfig()
+
+const { messages, input, handleSubmit, status, stop, setMessages } = useChat({
+  api: `${config.public.apiBase}/chat/${props.sessionId}`,
+  initialMessages: props.initialMessages,
 })
+
+// Sync messages from props (WS updates)
+watch(() => props.initialMessages, (newMessages) => {
+  if (newMessages && newMessages.length > messages.value.length) {
+    setMessages(newMessages)
+  }
+}, { deep: true })
 
 const emit = defineEmits<{
   (e: 'send', message: string): void,
 }>()
 
-const input = ref('')
-
-const onSubmit = () => {
-  if (!input.value.trim() || props.chat.status === 'streaming') return
-  emit('send', input.value)
-  input.value = ''
+const onSubmit = (e: Event) => {
+  if (!input.value.trim() || status.value === 'streaming') return
+  handleSubmit(e)
 }
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
@@ -35,7 +43,7 @@ const isMobile = breakpoints.smaller('lg')
     </template>
 
     <template #body>
-      <UChatMessages :messages="chat.messages" :status="chat.status" :should-auto-scroll="true" :assistant="{
+      <UChatMessages :messages="messages" :status="status" :should-auto-scroll="true" :assistant="{
         variant: 'naked'
       }">
         <!-- <template #content="{ message }">
@@ -48,7 +56,7 @@ const isMobile = breakpoints.smaller('lg')
       <UContainer class="pb-2 sm:pb-3">
         <UChatPrompt v-model="input" placeholder="Type a command (e.g., 'fail leader')..."
           @submit="onSubmit">
-          <UChatPromptSubmit :status="chat.status" @stop="chat.stop" />
+          <UChatPromptSubmit :status="status" @stop="stop" />
         </UChatPrompt>
       </UContainer>
     </template>
