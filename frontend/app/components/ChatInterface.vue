@@ -62,6 +62,25 @@ const onSubmit = () => {
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 const isMobile = breakpoints.smaller('lg')
+
+const quickChats = [
+  {
+    label: 'What happens if the leader fails?',
+    icon: 'i-heroicons-server-stack'
+  },
+  {
+    label: 'Explain the Raft consensus algorithm.',
+    icon: 'i-heroicons-book-open'
+  },
+  {
+    label: 'Store value 10 for the key x.',
+    icon: 'i-heroicons-key'
+  },
+]
+
+async function createChat(prompt: string) {
+  input.value = prompt
+}
 </script>
 
 <template>
@@ -80,6 +99,11 @@ const isMobile = breakpoints.smaller('lg')
 
     <template #footer>
       <UContainer class="pb-2 sm:pb-3">
+        <div class="flex flex-wrap gap-2 pb-2" v-if="clusterState?.chatHistory.length === 0">
+          <UButton v-for="quickChat in quickChats" :key="quickChat.label" :icon="quickChat.icon"
+            :label="quickChat.label" size="sm" color="neutral" variant="outline" class="rounded-full"
+            @click="createChat(quickChat.label)" />
+        </div>
         <UChatPrompt v-model="input" placeholder="Type a command (e.g., 'fail leader')..." @submit="onSubmit">
           <UChatPromptSubmit v-if="chat" :status="chat.status" @stop="chat.stop" />
           <template #footer>
