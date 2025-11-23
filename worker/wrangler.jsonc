@@ -21,7 +21,9 @@
 	"migrations": [
 		{
 			"tag": "v1",
-			"new_classes": ["RaftCluster"]
+			"new_classes": [
+				"RaftCluster"
+			]
 		}
 	],
 	"ai": {
@@ -36,8 +38,11 @@
 				"period": 60
 			}
 		}
-	]
-  	/**
+	],
+	"vars": {
+		"GOOGLE_GENERATIVE_AI_API_KEY": ""
+	}
+	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */

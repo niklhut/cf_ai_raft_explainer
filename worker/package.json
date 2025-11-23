@@ -9,6 +9,7 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.42",
     "@raft-simulator/shared": "workspace:*",
     "ai": "^5.0.99",
     "chanfana": "^2.8.3",

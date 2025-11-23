@@ -3,6 +3,7 @@ import { z } from "zod"
 import type { AppContext } from "../types"
 import type { RaftClusterState } from "@raft-simulator/shared"
 import { createWorkersAI } from "workers-ai-provider"
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import {
   convertToModelMessages,
   generateId,
@@ -10,6 +11,7 @@ import {
   streamText,
   tool,
   UIMessage,
+  UIMessageChunk,
 } from "ai"
 
 export class ChatSession extends OpenAPIRoute {
@@ -43,7 +45,7 @@ export class ChatSession extends OpenAPIRoute {
         description: "Returns the AI response stream",
         content: {
           "text/event-stream": {
-            schema: z.string(),
+            schema: z.any(),
           },
         },
       },
@@ -74,7 +76,10 @@ export class ChatSession extends OpenAPIRoute {
     }
 
     const workersai = createWorkersAI({ binding: c.env.AI })
-    const model = workersai("@cf/meta/llama-3.1-8b-instruct" as any)
+    const model = workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast" as any)
+    // const apiKey = c.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    // const google = createGoogleGenerativeAI({ apiKey })
+    // const model = google("gemini-2.5-flash-lite")
 
     const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
     const stub = c.env.RAFT_CLUSTER.get(id)
@@ -138,22 +143,35 @@ export class ChatSession extends OpenAPIRoute {
 
     const result = streamText({
       model,
-      system: `You are a Raft Consensus Algorithm expert and a simulator narrator.
-You have access to the 'changeClusterState' tool to simulate events.
+      abortSignal: c.req.raw.signal,
+      system: `You are the **Raft Consensus Algorithm Simulator Narrator and Expert Tutor**. Your primary goal is to guide the user through Raft concepts by simulating and explaining state changes in the cluster.
+
+The cluster's current state is provided below. You have access to the \`changeClusterState\` tool to simulate user-requested actions.
 
 Current Raft Cluster State: ${JSON.stringify(filteredOldState)}
 
-Instructions:
-1. When the user requests an action (e.g., 'fail node 3', 'set x=10'), you MUST use the 'changeClusterState' tool with the correct parameters.
-2. After the tool returns the new cluster state, use your expertise to provide a detailed, insightful, and concise explanation of what happened in the cluster based on the change (e.g., 'Node 2 was elected leader in term 5 due to the failure of the previous leader').
-3. If the user asks a theoretical question, answer it directly using your knowledge and the Current Cluster State as context.`,
+### Instructions for Response Generation:
+
+1.  **Tool Use:** Use the \`changeClusterState\` tool *only* when the user explicitly requests an action that changes the cluster state (e.g., "fail node 2", "set x=10").
+2.  **Narrative Style:** Always respond in a **conversational and educational narrative** style. Do not output raw JSON, tool calls, or internal notes.
+3.  **Explain the Change:** If an action is taken and the state updates, your response MUST cover three points in a clear narrative:
+    * **The Action:** What the user requested.
+    * **The Result:** The exact, specific changes in the cluster state (e.g., "Node 3 failed," "The key 'x' was updated to '10'," "Node 1 became the new leader").
+    * **The Raft Principle:** Explain the **Raft mechanism** that governed this change (e.g., "This triggered a new election cycle," "The log entry was successfully replicated to a majority," "The leader committed the new entry.").
+4.  **No Change/Error:** If the tool is called but no significant state change occurs, explain *why* based on Raft rules (e.g., "The node was already down, so the command was ignored by the system," or "The command was rejected because the current node is not the leader.").`,
       messages: convertToModelMessages(messages as UIMessage[]),
       tools: {
         changeClusterState: changeClusterStateTool,
       },
       stopWhen: stepCountIs(5),
-      onChunk: async (chunk) => {
+      onChunk: async ({ chunk }) => {
         console.log("Chunk:", chunk)
+        if (chunk.type === "text-delta") {
+          const assistantMessage = {
+            id: chunk.id,
+            text: chunk.text,
+          }
+        }
       },
       onFinish: async ({ text, toolCalls, toolResults }) => {
         console.log("Finished", text, toolCalls, toolResults)
@@ -179,10 +197,6 @@ Instructions:
     //   },
     // })
 
-    return result.toUIMessageStreamResponse({
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-    })
+    return result.toUIMessageStreamResponse()
   }
 }

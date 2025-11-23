@@ -4,6 +4,7 @@ export interface Env {
   RAFT_CLUSTER: DurableObjectNamespace;
   AI: any;
   RATE_LIMITER: any;
+  GOOGLE_GENERATIVE_AI_API_KEY: string;
 }
 
 export type AppContext = Context<{ Bindings: Env }>;

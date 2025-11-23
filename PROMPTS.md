@@ -692,3 +692,50 @@ Please wait for the response... [] []
 
 Can you fix this. Also the streaming of the response does not display in the client. Only when the final result is available does the result appear in the chat
 ```
+
+Follow up:
+
+```md
+Thanks, but the message streaming still does not appear in the client. Fix it. Also the tool calls sometimes don't work with this output e.g.
+
+    error: InvalidToolInputError [AI_InvalidToolInputError]: Invalid input for tool changeClusterState: Type validation failed: Value: {"command":"FAIL_LEADER","term":"3","type":"FAIL_LEADER"}.
+    Error message: [
+      {
+        "code": "invalid_type",
+        "expected": "object",
+        "received": "string",
+        "path": [
+          "command"
+        ],
+        "message": "Expected object, received string"
+      }
+    ]
+        at doParseToolCall (file:///Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/ai@5.0.99_zod@3.25.76/node_modules/ai/src/generate-text/parse-tool-call.ts:120:11)
+        at async parseToolCall (file:///Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/ai@5.0.99_zod@3.25.76/node_modules/ai/src/generate-text/parse-tool-call.ts:34:14)
+        at async Object.transform (file:///Users/nh/Developer/CloudflareInternship/raft-simulator/node_modules/.pnpm/ai@5.0.99_zod@3.25.76/node_modules/ai/src/generate-text/run-tools-transformation.ts:218:30) {
+      cause: [_TypeValidationError],
+      toolInput: '{"command":"FAIL_LEADER","term":"3","type":"FAIL_LEADER"}',
+      toolName: 'changeClusterState',
+      Symbol(vercel.ai.error): true,
+      Symbol(vercel.ai.error.AI_InvalidToolInputError): true
+    }
+  }
+}
+
+Can we maybe choose a more competent model since llama 3 is quite old by now or what can we do?
+```
+
+Follow up:
+
+```md
+The streaming still does not work! In the network tab of the dev-tools I also don't see any incoming messages for the chunks. Try again!
+Also the messages do not explain the state currently but just list it. Adjust the system prompt to explain the changes better, here is an example output:
+
+The current state of the Raft cluster is:
+
+Node 1 is dead.
+Node 2 is a follower in term 2.
+Node 3 is a follower in term 2.
+Node 4 is the leader in term 2.
+Node 5 is a follower in term 2. The key-value store contains the key "config" with value "x".
+```

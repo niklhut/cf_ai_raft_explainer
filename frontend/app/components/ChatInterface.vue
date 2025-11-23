@@ -2,7 +2,7 @@
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 import { Chat } from '@ai-sdk/vue'
-import { TextStreamChatTransport, type UIMessage } from "ai"
+import { DefaultChatTransport, TextStreamChatTransport, type UIMessage } from "ai"
 
 const config = useRuntimeConfig()
 
@@ -11,16 +11,12 @@ const { clusterState } = storeToRefs(clusterStore)
 
 const input = ref("")
 
-const transport = new TextStreamChatTransport({
-  api: `${config.public.apiBase}/chat/${clusterState.value?.id}`,
-})
-
-const chat = shallowRef<Chat<UIMessage> | null>(null)
+const chat = shallowRef<Chat<UIMessage>>(new Chat({}))
 
 watch(clusterState, (state) => {
   if (!state?.id) return
 
-  const t = new TextStreamChatTransport({
+  const t = new DefaultChatTransport({
     api: `${config.public.apiBase}/chat/${state.id}`,
   })
 
@@ -29,7 +25,6 @@ watch(clusterState, (state) => {
     messages: state.chatHistory ?? [],
   })
 }, { immediate: true })
-
 
 const onSubmit = () => {
   const trimmed = input.value.trim()

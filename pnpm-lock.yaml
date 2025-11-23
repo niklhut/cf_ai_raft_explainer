@@ -52,6 +52,9 @@ importers:
 
   worker:
     dependencies:
+      '@ai-sdk/google':
+        specifier: ^2.0.42
+        version: 2.0.42(zod@3.25.76)
       '@raft-simulator/shared':
         specifier: workspace:*
         version: link:../shared
@@ -85,6 +88,12 @@ packages:
 
   '@ai-sdk/gateway@2.0.13':
     resolution: {integrity: sha512-q8M+7+VEKp91I295cjNDgQ4LyGImKj5cDLVARDay7nBTXGjIRZOlthYE7K6Rbz2yHKFyTmKH7MMkYavAM7L/UQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/google@2.0.42':
+    resolution: {integrity: sha512-Jdn+3TZm4iIt62CUjjUoIOshqFIXyzNmUDfkSVV4FcjlSo5+AuhzI1KC7QiNHlqPNejzR6NLIqGJx96VAES34g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -4716,6 +4725,12 @@ snapshots:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.17(zod@3.25.76)
       '@vercel/oidc': 3.0.5
+      zod: 3.25.76
+
+  '@ai-sdk/google@2.0.42(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.17(zod@3.25.76)
       zod: 3.25.76
 
   '@ai-sdk/provider-utils@3.0.17(zod@3.25.76)':
