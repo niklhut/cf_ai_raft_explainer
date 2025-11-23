@@ -74,7 +74,7 @@ export class ChatSession extends OpenAPIRoute {
     }
 
     const workersai = createWorkersAI({ binding: c.env.AI })
-    const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct" as any)
+    const model = workersai("@cf/meta/llama-3.1-8b-instruct" as any)
 
     const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
     const stub = c.env.RAFT_CLUSTER.get(id)
@@ -179,6 +179,10 @@ Instructions:
     //   },
     // })
 
-    return result.toUIMessageStreamResponse()
+    return result.toUIMessageStreamResponse({
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    })
   }
 }

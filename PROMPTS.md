@@ -676,3 +676,19 @@ Thanks. But currently we don't persist the new message the user sends on the dur
 Also, the cluster simulation is not shown on the client and apparently also not persistet on the DO since after a refresh of the page there is no change visible either. 
 While you're at it, maybe adjust the nuxt frontend so each chat has its own uri with the session id and the index page redirects to the latest chat if it exists or creates a new one.
 ```
+
+New chat:
+
+```md
+The chat Session llm in the background does not manage to actually perform tool calls. It only says it will but then finishes generation. here is an example log output:
+
+Finished To simulate the failure of the leader, I will use the `changeClusterState` tool with the `FAIL_LEADER` command.
+
+{"name": "changeClusterState", "parameters": {"command": {"type": "FAIL_LEADER"}}}
+
+After the tool returns the new cluster state, I will provide a detailed explanation of what happened in the cluster.
+
+Please wait for the response... [] []
+
+Can you fix this. Also the streaming of the response does not display in the client. Only when the final result is available does the result appear in the chat
+```
