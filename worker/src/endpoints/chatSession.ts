@@ -3,7 +3,7 @@ import { z } from "zod"
 import type { AppContext } from "../types"
 import type { RaftClusterState } from "@raft-simulator/shared"
 import { createWorkersAI } from "workers-ai-provider"
-import { streamText, tool } from "ai"
+import { convertToModelMessages, stepCountIs, streamText, tool, UIMessage } from "ai"
 
 export class ChatSession extends OpenAPIRoute {
   schema = {
@@ -67,7 +67,7 @@ export class ChatSession extends OpenAPIRoute {
     }
 
     const workersai = createWorkersAI({ binding: c.env.AI })
-    const model = workersai("@cf/meta/llama-3.1-8b-instruct" as any)
+    const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct" as any)
 
     const id = c.env.RAFT_CLUSTER.idFromString(sessionId)
     const stub = c.env.RAFT_CLUSTER.get(id)
@@ -106,6 +106,7 @@ export class ChatSession extends OpenAPIRoute {
         }),
       }),
       execute: async ({ command }) => {
+        console.log("Executing command via tool:", command)
         const res = await stub.fetch("https://dummy/execute", {
           method: "POST",
           body: JSON.stringify({ command }),
@@ -126,7 +127,7 @@ Instructions:
 1. When the user requests an action (e.g., 'fail node 3', 'set x=10'), you MUST use the 'changeClusterState' tool with the correct parameters.
 2. After the tool returns the new cluster state, use your expertise to provide a detailed, insightful, and concise explanation of what happened in the cluster based on the change (e.g., 'Node 2 was elected leader in term 5 due to the failure of the previous leader').
 3. If the user asks a theoretical question, answer it directly using your knowledge and the Current Cluster State as context.`,
-      messages: messages as any,
+      messages: convertToModelMessages(messages as UIMessage[]),
       tools: {
         changeClusterState: changeClusterStateTool,
       },
@@ -137,8 +138,15 @@ Instructions:
           headers: { "Content-Type": "application/json" },
         })
       },
+      stopWhen: stepCountIs(5)
     })
 
-    return (result as any).toDataStreamResponse()
+    return result.toTextStreamResponse({
+      headers: {
+        "Content-Type": "text/x-unknown",
+        "content-encoding": "identity",
+        "transfer-encoding": "chunked",
+      },
+    })
   }
 }
