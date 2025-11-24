@@ -1176,3 +1176,159 @@ runtime-core.esm-bun…er.js?v=ab7927aa:50 [Vue warn]: Hydration class mismatch 
   Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
 Error with Permissions-Policy header: Unrecognized feature: 'interest-cohort'.
 ```
+
+New Chat:
+
+```md
+I am building a Raft explainer AI, which simulates a Raft cluster and explains changes. Here is my system prompt:
+
+
+
+    const changeClusterStateTool = tool({
+
+      description:
+
+        "A tool used to simulate an event or command in the Raft cluster, such as failing a node, recovering a node, or setting a key/value. Use this tool when the user requests an action that changes the cluster state.",
+
+      inputSchema: z.object({
+
+        command: z.object({
+
+          type: z
+
+            .enum(["FAIL_LEADER", "FAIL_NODE", "RECOVER_NODE", "SET_KEY"])
+
+            .describe(
+
+              "The specific type of Raft simulation command to execute.",
+
+            ),
+
+          nodeId: z
+
+            .number()
+
+            .optional()
+
+            .describe(
+
+              "The ID of the node (e.g., 1, 2, 3) to target. Required for FAIL_NODE and RECOVER_NODE.",
+
+            ),
+
+          key: z
+
+            .string()
+
+            .optional()
+
+            .describe("The key name for SET_KEY commands."),
+
+          value: z
+
+            .string()
+
+            .optional()
+
+            .describe(
+
+              "The value to associate with the key for SET_KEY commands, empty if key should be deleted.",
+
+            ),
+
+        }),
+
+      }),
+
+      execute: async ({ command }) => {
+
+        console.log("Executing command via tool:", command)
+
+        const res = await stub.fetch("https://dummy/execute", {
+
+          method: "POST",
+
+          body: JSON.stringify({ command }),
+
+        })
+
+        const newState = (await res.json()) as RaftClusterState
+
+        return this.filterState(newState, true)
+
+      },
+
+    })
+
+
+
+    const result = streamText({
+
+      model,
+
+      abortSignal: c.req.raw.signal,
+
+      system: `You are the **Raft Consensus Algorithm Simulator Narrator and Expert Tutor**. Your primary goal is to guide the user through Raft concepts by simulating and explaining state changes in the cluster.
+
+
+
+The cluster's current state is provided below. You have access to the \`changeClusterState\` tool to simulate user-requested actions.
+
+
+
+Current Raft Cluster State: ${JSON.stringify(filteredOldState)}
+
+
+
+### Instructions for Response Generation:
+
+
+
+1.  **Tool Use:** Use the \`changeClusterState\` tool *only* when the user explicitly requests an action that changes the cluster state (e.g., "fail node 2", "set x=10").
+
+2.  **Narrative Style:** Always respond in a **conversational and educational narrative** style. Do not output raw JSON, tool calls, or internal notes.
+
+3.  **Explain the Change:** If an action is taken and the state updates, your response MUST cover three points in a clear narrative:
+
+    * **The Action:** What the user requested.
+
+    * **The Result:** The exact, specific changes in the cluster state (e.g., "Node 3 failed," "The key 'x' was updated to '10'," "Node 1 became the new leader").
+
+    * **The Raft Principle:** Explain the **Raft mechanism** that governed this change (e.g., "This triggered a new election cycle," "The log entry was successfully replicated to a majority," "The leader committed the new entry.").
+
+4.  **No Change/Error:** If the tool is called but no significant state change occurs, explain *why* based on Raft rules (e.g., "The node was already down, so the command was ignored by the system," or "The command was rejected because the current node is not the leader.").`,
+
+
+
+Gemini Models (2.5 Flash and Flash Lite) answer questions like "Store value 10 for the key x." well like this:
+
+
+
+Now, the key 'x' has been updated to the value '10' in the cluster's key-value store. This change was initiated by the current leader. In Raft, for a key-value store operation to be considered successful, the leader must first append the operation to its log and then replicate it to a majority of the nodes in the cluster. Once a majority has acknowledged the entry, the leader commits it, making it a permanent part of the replicated log. The leader then applies the operation to its state machine (in this case, updating 'x' to '10') and responds to the client. Subsequently, as other nodes apply the committed entry to their own state machines, they will also update their key-value stores to reflect the new value of 'x'.
+
+
+
+But the meta model: @cf/meta/llama-3.3-70b-instruct-fp8-fast does not answer well. Often like this:
+
+
+
+
+
+The current state of the Raft cluster is as follows:
+
+Nodes:Node 1: Follower, Term 1
+
+Node 2: Follower, Term 1
+
+Node 3: Follower, Term 1
+
+Node 4: Leader, Term 1
+
+Node 5: Follower, Term 1
+
+Key/Value Store:Key: x, Value: 10
+
+
+
+How can we improve this? Adjust the system prompt, if so how? Are there other meta models hosted on cloudflare which might perform better?
+```
