@@ -1350,3 +1350,22 @@ New chat:
 ```md
 Adjust the project to include github actions to deploy the frontend to cloudflare pages and the backend worker to cloudflare. Both should be available at raft.niklhut.com (I own niklhut.com and its dns is with cloudflare), the /api route should redirect to the worker but preserve the /api path since the worker needs the /api in its path. Also give me guidance on how to set the env vars for deployment
 ```
+
+Follow up:
+
+```md
+I get this error from the Github actions: 
+
+Error: Multiple versions of pnpm specified:
+    - version 9 in the GitHub Action config with the key "version"
+    - version pnpm@10.23.0+sha512.21c4e5698002ade97e4efe8b8b4a89a8de3c85a37919f957e7a0f30f38fbc5bbdd05980ffe29179b2fb6e6e691242e098d945d1601772cad0fef5fb6411e2a4b in the package.json with the key "packageManager"
+  Remove one of these versions to avoid version mismatch errors like ERR_PNPM_BAD_PM_VERSION
+      at readTarget (/home/runner/work/_actions/pnpm/action-setup/v4/dist/index.js:1:4977)
+      at runSelfInstaller (/home/runner/work/_actions/pnpm/action-setup/v4/dist/index.js:1:4142)
+      at async install (/home/runner/work/_actions/pnpm/action-setup/v4/dist/index.js:1:3154)
+      at async main (/home/runner/work/_actions/pnpm/action-setup/v4/dist/index.js:1:445)
+  Error: Error: Multiple versions of pnpm specified:
+    - version 9 in the GitHub Action config with the key "version"
+    - version pnpm@10.23.0+sha512.21c4e5698002ade97e4efe8b8b4a89a8de3c85a37919f957e7a0f30f38fbc5bbdd05980ffe29179b2fb6e6e691242e098d945d1601772cad0fef5fb6411e2a4b in the package.json with the key "packageManager"
+  Remove one of these versions to avoid version mismatch errors like ERR_PNPM_BAD_PM_VERSION
+```
