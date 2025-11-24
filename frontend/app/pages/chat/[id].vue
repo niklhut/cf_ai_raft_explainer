@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 const route = useRoute()
 
 const sessionStore = useSessionStore()
+const { savedSessions } = storeToRefs(sessionStore)
 const { switchSession } = sessionStore
 
 const clusterStore = useClusterStore()
@@ -15,9 +16,12 @@ const isChatSlideoverOpen = ref(false)
 
 onMounted(async () => {
     const id = route.params.id as string
-    if (id) {
+    if (id && savedSessions.value.find(s => s.id === id)) {
         await switchSession(id)
         initActiveSession()
+        return
+    } else {
+        navigateTo('/')
     }
 })
 
@@ -71,7 +75,8 @@ const isMobile = breakpoints.smaller('lg')
 
         </UDashboardPanel>
 
-        <ChatInterface v-if="clusterState && !isMobile" :sessionId="clusterState.id" :initialMessages="clusterState.chatHistory" :key="clusterState.id" />
+        <ChatInterface v-if="clusterState && !isMobile" :sessionId="clusterState.id"
+            :initialMessages="clusterState.chatHistory" :key="clusterState.id" />
 
         <ClientOnly>
             <USlideover v-if="isMobile" v-model:open="isChatSlideoverOpen" side="bottom">
@@ -81,7 +86,8 @@ const isMobile = breakpoints.smaller('lg')
                         @click="isChatSlideoverOpen = false" />
                 </template>
                 <template #body>
-                    <ChatInterface v-if="clusterState" :sessionId="clusterState.id" :initialMessages="clusterState.chatHistory" :key="clusterState.id"
+                    <ChatInterface v-if="clusterState" :sessionId="clusterState.id"
+                        :initialMessages="clusterState.chatHistory" :key="clusterState.id"
                         @close="isChatSlideoverOpen = false" />
                 </template>
             </USlideover>
