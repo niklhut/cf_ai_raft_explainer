@@ -29,7 +29,7 @@ export async function verifyTurnstile(
 
 export async function requireTurnstile(c: AppContext): Promise<void> {
   const token =
-    c.req.header("X-Turnstile-Token") ?? getCookie(c, "turnstile_token")
+    c.req.header("x-turnstile-token") ?? getCookie(c, "turnstile_token")
 
   if (!token) {
     throw new HTTPException(401, {

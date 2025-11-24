@@ -11,7 +11,7 @@ export function useChatTransport(sessionId: string) {
     fetch: (input, init: RequestInit = {}) => {
       init.headers = {
         ...(init.headers || {}),
-        "X-Turnstile-Token": turnstileToken.value ?? "",
+        "x-turnstile-token": turnstileToken.value ?? "",
       }
 
       if (init.method === "POST" && init.body) {

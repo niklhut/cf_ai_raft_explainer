@@ -6,7 +6,7 @@ export function useApi() {
     get: (url: string) =>
       $fetch(config.public.apiBase + url, {
         headers: {
-          "X-Turnstile-Token": turnstileToken.value || "",
+          "x-turnstile-token": turnstileToken.value || "",
         },
       }),
     post: (url: string, body: any) =>
@@ -14,7 +14,7 @@ export function useApi() {
         method: "POST",
         body,
         headers: {
-          "X-Turnstile-Token": turnstileToken.value || "",
+          "x-turnstile-token": turnstileToken.value || "",
         },
       }),
   }
