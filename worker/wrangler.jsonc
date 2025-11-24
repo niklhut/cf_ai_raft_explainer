@@ -21,7 +21,7 @@
 	"migrations": [
 		{
 			"tag": "v1",
-			"new_classes": [
+			"new_sqlite_classes": [
 				"RaftCluster"
 			]
 		}
@@ -42,7 +42,10 @@
 	"vars": {
 		"GOOGLE_GENERATIVE_AI_API_KEY": "",
 		"TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA"
-	}
+	},
+	"routes": [
+		"raft.niklhut.com/api/*"
+	]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

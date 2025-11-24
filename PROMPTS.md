@@ -1344,3 +1344,9 @@ New chat:
 ```md
 Add links to the privacy and imprint page in the sidebar. Also make sure on the privacy and imprint page one can navigate back to the main applicaiton as well as to the other legal document.
 ```
+
+New chat:
+
+```md
+Adjust the project to include github actions to deploy the frontend to cloudflare pages and the backend worker to cloudflare. Both should be available at raft.niklhut.com (I own niklhut.com and its dns is with cloudflare), the /api route should redirect to the worker but preserve the /api path since the worker needs the /api in its path. Also give me guidance on how to set the env vars for deployment
+```

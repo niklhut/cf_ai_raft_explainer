@@ -17,7 +17,7 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
   runtimeConfig: {
     public: {
-      apiBase: "http://localhost:8787/api",
+      apiBase: process.env.NODE_ENV === "production" ? "/api" : "http://localhost:8787/api",
     },
   },
   nitro: {
