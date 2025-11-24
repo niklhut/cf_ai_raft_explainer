@@ -1332,3 +1332,15 @@ Key/Value Store:Key: x, Value: 10
 
 How can we improve this? Adjust the system prompt, if so how? Are there other meta models hosted on cloudflare which might perform better?
 ```
+
+New chat:
+
+```md
+How do I best deploy my AI Raft Explainer App to cloudflare? The frontend is built in nuxt and the backend uses Cloudflare workers with durable objects. It is all in a monorepo with a frontend and worker subfolder. Can I have both on the same domain, like raft.mydomian.com and send regular traffic to the frontend but /api to the worker (but also keep the /api url since it expects the /api subroute for all routes)?
+```
+
+New chat:
+
+```md
+Add links to the privacy and imprint page in the sidebar. Also make sure on the privacy and imprint page one can navigate back to the main applicaiton as well as to the other legal document.
+```

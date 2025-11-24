@@ -29,6 +29,20 @@ const items = computed(() => [
       active: session.id === sessionId.value,
       color: 'neutral' as const,
     })),
+  ],
+  [
+    {
+      label: 'Privacy',
+      icon: 'i-heroicons-shield-check',
+      to: '/privacy',
+      color: 'neutral' as const
+    },
+    {
+      label: 'Imprint',
+      icon: 'i-heroicons-information-circle',
+      to: '/imprint',
+      color: 'neutral' as const
+    }
   ]
 ])
 </script>
@@ -45,6 +59,10 @@ const items = computed(() => [
       <UNavigationMenu :collapsed="collapsed" :items="items[0]" orientation="vertical" />
 
       <UNavigationMenu :collapsed="collapsed" :items="items[1]" orientation="vertical" class="mt-auto" />
+    </template>
+
+    <template #footer="{ collapsed }">
+      
     </template>
   </UDashboardSidebar>
 </template>

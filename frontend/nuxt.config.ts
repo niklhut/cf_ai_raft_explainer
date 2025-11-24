@@ -20,4 +20,7 @@ export default defineNuxtConfig({
       apiBase: "http://localhost:8787/api",
     },
   },
+  nitro: {
+    preset: "cloudflare-pages",
+  }
 })
