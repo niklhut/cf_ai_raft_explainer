@@ -6,6 +6,7 @@ import { useSessionStore } from "./chatSessions"
 export const useClusterStore = defineStore("cluster", () => {
   const config = useRuntimeConfig()
   const { get } = useApi()
+  const { getSessionToken } = useAuth()
 
   const sessionStore = useSessionStore()
 
@@ -35,15 +36,21 @@ export const useClusterStore = defineStore("cluster", () => {
     }
   }
 
-  const connectWebSocket = () => {
+  const connectWebSocket = async () => {
     const sessionId = sessionStore.sessionId
     if (!sessionId || !import.meta.client) return
+
+    const token = await getSessionToken()
+    if (!token) {
+      console.error("No session token available for WebSocket connection")
+      return
+    }
 
     const protocol = location.protocol === "https:" ? "wss:" : "ws:"
     const host = config.public.apiBase
       .replace(/^https?:\/\//, "")
       .replace(/\/$/, "")
-    const wsUrl = `${protocol}//${host}/ws/${sessionId}`
+    const wsUrl = `${protocol}//${host}/ws/${sessionId}?token=${token}`
 
     ws = new WebSocket(wsUrl)
 

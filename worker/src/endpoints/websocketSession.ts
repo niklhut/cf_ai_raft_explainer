@@ -1,7 +1,7 @@
 import { OpenAPIRoute } from "chanfana"
 import { z } from "zod"
 import type { AppContext } from "../types"
-import { requireTurnstile } from "../utils/turnstile"
+import { requireAuth } from "../middleware/auth"
 
 export class WebsocketSession extends OpenAPIRoute {
   schema = {
@@ -10,6 +10,9 @@ export class WebsocketSession extends OpenAPIRoute {
     request: {
       params: z.object({
         sessionId: z.string(),
+      }),
+      query: z.object({
+        token: z.string().optional(),
       }),
       headers: z.object({
         Upgrade: z.string().optional(),
@@ -25,7 +28,7 @@ export class WebsocketSession extends OpenAPIRoute {
   }
 
   async handle(c: AppContext) {
-    await requireTurnstile(c)
+    await requireAuth(c)
 
     const data = await this.getValidatedData<typeof this.schema>()
     const sessionId = data.params.sessionId

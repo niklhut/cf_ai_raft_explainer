@@ -1376,3 +1376,15 @@ New chat:
 When i deploy this, I get the error turnstile verification failed on the worker routes. Why? How can we fix this? 
 Also the cloudflare/pages-action@v1 action is deprecated and should be switched to the wrangler-action, adjust this please
 ```
+
+New chat:
+
+```md
+I have the problem that the turnstile tokens are single use and after the first request all subsequent requests fail validation on the server. Can you fix this by just verifying the turnstile token once at a new api route, then establish a session with a token or JWT and subsequently require all worker endpoints to be used with a valid token or deny access. Also adjust the frontend accordingly
+```
+
+Follow up:
+
+```md
+Thanks but the auth header does not work with the web socket endpoint connection
+```

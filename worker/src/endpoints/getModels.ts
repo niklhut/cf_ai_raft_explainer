@@ -1,7 +1,7 @@
 import { OpenAPIRoute } from "chanfana"
 import { z } from "zod"
 import type { AppContext } from "../types"
-import { requireTurnstile } from "../utils/turnstile"
+import { requireAuth } from "../middleware/auth"
 
 export class GetModels extends OpenAPIRoute {
   schema = {
@@ -27,7 +27,7 @@ export class GetModels extends OpenAPIRoute {
   }
 
   async handle(c: AppContext) {
-    await requireTurnstile(c)
+    await requireAuth(c)
 
     const models = [
       {

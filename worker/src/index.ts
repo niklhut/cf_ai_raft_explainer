@@ -6,6 +6,7 @@ import { ChatSession } from "./endpoints/chatSession"
 import { GetModels } from "./endpoints/getModels"
 import { StateSession } from "./endpoints/stateSession"
 import { WebsocketSession } from "./endpoints/websocketSession"
+import { AuthVerify } from "./endpoints/authVerify"
 import type { Env } from "./types"
 
 // Start a Hono app
@@ -20,6 +21,7 @@ const openapi = fromHono(app, {
 })
 
 // Register OpenAPI endpoints
+openapi.post("/api/auth/verify", AuthVerify)
 openapi.post("/api/chat/new", ChatNew)
 openapi.get("/api/models", GetModels)
 openapi.post("/api/chat/:sessionId", ChatSession)

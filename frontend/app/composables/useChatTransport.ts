@@ -2,16 +2,17 @@ import { DefaultChatTransport } from "ai"
 
 export function useChatTransport(sessionId: string) {
   const config = useRuntimeConfig()
-  const turnstileToken = useCookie("turnstile_token")
+  const { getSessionToken } = useAuth()
   const { model } = useModels()
 
   const transport = new DefaultChatTransport({
     api: `${config.public.apiBase}/chat/${sessionId}`,
 
-    fetch: (input, init: RequestInit = {}) => {
+    fetch: async (input, init: RequestInit = {}) => {
+      const token = await getSessionToken()
       init.headers = {
         ...(init.headers || {}),
-        "x-turnstile-token": turnstileToken.value ?? "",
+        Authorization: token ? `Bearer ${token}` : "",
       }
 
       if (init.method === "POST" && init.body) {

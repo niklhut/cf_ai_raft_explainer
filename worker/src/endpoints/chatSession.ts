@@ -12,7 +12,7 @@ import {
   tool,
   UIMessage,
 } from "ai"
-import { requireTurnstile } from "../utils/turnstile"
+import { requireAuth } from "../middleware/auth"
 
 export class ChatSession extends OpenAPIRoute {
   schema = {
@@ -64,7 +64,7 @@ export class ChatSession extends OpenAPIRoute {
   }
 
   async handle(c: AppContext) {
-    await requireTurnstile(c)
+    await requireAuth(c)
 
     const data = await this.getValidatedData<typeof this.schema>()
     const { sessionId } = data.params

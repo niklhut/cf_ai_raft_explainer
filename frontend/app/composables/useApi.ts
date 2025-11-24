@@ -1,21 +1,24 @@
 export function useApi() {
   const config = useRuntimeConfig()
-  const turnstileToken = useCookie("turnstile_token")
+  const { getSessionToken } = useAuth()
+
+  const getHeaders = async () => {
+    const token = await getSessionToken()
+    return {
+      Authorization: token ? `Bearer ${token}` : "",
+    }
+  }
 
   return {
-    get: (url: string) =>
+    get: async (url: string) =>
       $fetch(config.public.apiBase + url, {
-        headers: {
-          "x-turnstile-token": turnstileToken.value || "",
-        },
+        headers: await getHeaders(),
       }),
-    post: (url: string, body: any) =>
+    post: async (url: string, body: any) =>
       $fetch(config.public.apiBase + url, {
         method: "POST",
         body,
-        headers: {
-          "x-turnstile-token": turnstileToken.value || "",
-        },
+        headers: await getHeaders(),
       }),
   }
 }
