@@ -28,7 +28,8 @@ export async function verifyTurnstile(
 }
 
 export async function requireTurnstile(c: AppContext): Promise<void> {
-  const token = c.req.header("X-Turnstile-Token") ?? getCookie(c, "turnstile_token")
+  const token =
+    c.req.header("X-Turnstile-Token") ?? getCookie(c, "turnstile_token")
 
   if (!token) {
     throw new HTTPException(401, {
@@ -50,27 +51,3 @@ export async function requireTurnstile(c: AppContext): Promise<void> {
     })
   }
 }
-
-// export async function requireTurnstile(c: AppContext): Promise<void> {
-//   const token = getCookie(c, "turnstile_token")
-
-// if (!token) {
-//   throw new HTTPException(401, {
-//     message: "Authentication Failed: Missing 'turnstile_token' cookie.",
-//   })
-// }
-
-//   const secretKey = c.env.TURNSTILE_SECRET_KEY
-//   const remoteIp = c.req.header("CF-Connecting-IP")
-//   const validationResult = await verifyTurnstile(token, secretKey, remoteIp)
-
-//   if (!validationResult.success) {
-//     console.error(
-//       "Turnstile validation failed:",
-//       validationResult["error-codes"],
-//     )
-//     throw new HTTPException(403, {
-//       message: "Access Denied: Turnstile verification failed.",
-//     })
-//   }
-// }
