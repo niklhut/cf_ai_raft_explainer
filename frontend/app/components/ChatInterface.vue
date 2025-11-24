@@ -2,10 +2,7 @@
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 import { Chat } from '@ai-sdk/vue'
-import { DefaultChatTransport, type UIMessage } from "ai"
-
-const config = useRuntimeConfig()
-const { model } = useModels()
+import { type UIMessage } from "ai"
 
 const clusterStore = useClusterStore()
 const { clusterState } = storeToRefs(clusterStore)

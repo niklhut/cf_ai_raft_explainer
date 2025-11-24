@@ -9,7 +9,7 @@ const { switchSession } = sessionStore
 
 const clusterStore = useClusterStore()
 const { initActiveSession, stopPolling } = clusterStore
-const { clusterState, isLoading, isConnected, error } = storeToRefs(clusterStore)
+const { clusterState, isLoading, isConnected } = storeToRefs(clusterStore)
 
 const isChatSlideoverOpen = ref(false)
 
