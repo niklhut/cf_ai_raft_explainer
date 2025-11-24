@@ -803,3 +803,376 @@ Follow up:
 ```md
 Thanks. Also add a readyble name i can specify on the server which is shown in the ui instead of the long model name
 ```
+
+New chat:
+
+```md
+Can you protect the entire frontend with a cloudflare turnstile not protection to prevent abuse of the AI usage
+```
+
+Follow up:
+
+```md
+Thanks. But even when the challenge clears the view does not change. I also get these errors on the client
+
+runtime-core.esm-bundler.js?v=ab7927aa:50 [Vue warn]: Hydration node mismatch:
+- rendered on server: <!--[--> (start of fragment) 
+- expected on client: h1 
+  at <ToastProvider swipe-direction="right" duration=5000 > 
+  at <Toaster key=0 > 
+  at <TooltipProvider > 
+  at <ConfigProvider use-id=fn<use-id> dir=undefined locale=undefined > 
+  at <App > 
+  at <App key=4 > 
+  at <NuxtRoot>
+warn$1 @ runtime-core.esm-bundler.js?v=ab7927aa:50
+handleMismatch @ runtime-core.esm-bundler.js?v=ab7927aa:2113
+onMismatch @ runtime-core.esm-bundler.js?v=ab7927aa:1721
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1819
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateElement @ runtime-core.esm-bundler.js?v=ab7927aa:1922
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1821
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSuspense @ runtime-core.esm-bundler.js?v=ab7927aa:7393
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1876
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrate @ runtime-core.esm-bundler.js?v=ab7927aa:1714
+mount @ runtime-core.esm-bundler.js?v=ab7927aa:4024
+app.mount @ runtime-dom.esm-bundler.js?v=ab7927aa:1820
+initApp @ entry.js?v=ab7927aa:65
+await in initApp
+(anonymous) @ entry.js?v=ab7927aa:73
+runtime-core.esm-bundler.js?v=ab7927aa:1678 Hydration completed but contains mismatches.
+logMismatchError @ runtime-core.esm-bundler.js?v=ab7927aa:1678
+handleMismatch @ runtime-core.esm-bundler.js?v=ab7927aa:2122
+onMismatch @ runtime-core.esm-bundler.js?v=ab7927aa:1721
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1819
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateElement @ runtime-core.esm-bundler.js?v=ab7927aa:1922
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1821
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSuspense @ runtime-core.esm-bundler.js?v=ab7927aa:7393
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1876
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrate @ runtime-core.esm-bundler.js?v=ab7927aa:1714
+mount @ runtime-core.esm-bundler.js?v=ab7927aa:4024
+app.mount @ runtime-dom.esm-bundler.js?v=ab7927aa:1820
+initApp @ entry.js?v=ab7927aa:65
+await in initApp
+(anonymous) @ entry.js?v=ab7927aa:73
+runtime-core.esm-bundler.js?v=ab7927aa:50 [Vue warn]: Hydration children mismatch on <div class=​"fixed inset-0 flex overflow-hidden">​…​</div>​flex 
+Server rendered element contains fewer child nodes than client vdom. 
+  at <ToastProvider swipe-direction="right" duration=5000 > 
+  at <Toaster key=0 > 
+  at <TooltipProvider > 
+  at <ConfigProvider use-id=fn<use-id> dir=undefined locale=undefined > 
+  at <App > 
+  at <App key=4 > 
+  at <NuxtRoot>
+warn$1 @ runtime-core.esm-bundler.js?v=ab7927aa:50
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2060
+hydrateElement @ runtime-core.esm-bundler.js?v=ab7927aa:1922
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1821
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSuspense @ runtime-core.esm-bundler.js?v=ab7927aa:7393
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1876
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrate @ runtime-core.esm-bundler.js?v=ab7927aa:1714
+mount @ runtime-core.esm-bundler.js?v=ab7927aa:4024
+app.mount @ runtime-dom.esm-bundler.js?v=ab7927aa:1820
+initApp @ entry.js?v=ab7927aa:65
+await in initApp
+(anonymous) @ entry.js?v=ab7927aa:73
+runtime-core.esm-bundler.js?v=ab7927aa:50 [Vue warn]: Hydration class mismatch on <div class=​"fixed inset-0 flex overflow-hidden">​…​</div>​flex 
+  - rendered on server: class="fixed inset-0 flex overflow-hidden"
+  - expected on client: class="flex flex-col items-center justify-center h-screen gap-4"
+  Note: this mismatch is check-only. The DOM will not be rectified in production due to performance overhead.
+  You should fix the source of the mismatch. 
+  at <ToastProvider swipe-direction="right" duration=5000 > 
+  at <Toaster key=0 > 
+  at <TooltipProvider > 
+  at <ConfigProvider use-id=fn<use-id> dir=undefined locale=undefined > 
+  at <App > 
+  at <App key=4 > 
+  at <NuxtRoot>
+warn$1 @ runtime-core.esm-bundler.js?v=ab7927aa:50
+propHasMismatch @ runtime-core.esm-bundler.js?v=ab7927aa:2257
+hydrateElement @ runtime-core.esm-bundler.js?v=ab7927aa:1984
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1821
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateChildren @ runtime-core.esm-bundler.js?v=ab7927aa:2043
+hydrateFragment @ runtime-core.esm-bundler.js?v=ab7927aa:2090
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1806
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrateSuspense @ runtime-core.esm-bundler.js?v=ab7927aa:7393
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1876
+hydrateSubTree @ runtime-core.esm-bundler.js?v=ab7927aa:5401
+componentUpdateFn @ runtime-core.esm-bundler.js?v=ab7927aa:5419
+run @ reactivity.esm-bundler.js?v=ab7927aa:207
+setupRenderEffect @ runtime-core.esm-bundler.js?v=ab7927aa:5564
+mountComponent @ runtime-core.esm-bundler.js?v=ab7927aa:5338
+hydrateNode @ runtime-core.esm-bundler.js?v=ab7927aa:1840
+hydrate @ runtime-core.esm-bundler.js?v=ab7927aa:1714
+mount @ runtime-core.esm-bundler.js?v=ab7927aa:4024
+app.mount @ runtime-dom.esm-bundler.js?v=ab7927aa:1820
+initApp @ entry.js?v=ab7927aa:65
+await in initApp
+(anonymous) @ entry.js?v=ab7927aa:73
+check-if-page-unused.js?v=ab7927aa:11 [nuxt] Your project has pages but the `<NuxtPage />` component has not been used. You might be using the `<RouterView />` component instead, which will not work correctly in Nuxt. You can set `pages: false` in `nuxt.config` if you do not wish to use the Nuxt `vue-router` integration.
+```
+
+Follow up:
+
+```md
+Thanks but i still get hydration and other errors on the client and the layout also looks wrong on the turnstile check:
+
+runtime-core.esm-bun…er.js?v=ab7927aa:50 [Vue warn]: Hydration node mismatch:
+- rendered on server: 
+ (start of fragment) 
+- expected on client: h1 
+  at <ToastProvider swipe-direction="right" duration=5000 > 
+  at <Toaster key=0 > 
+  at <TooltipProvider > 
+  at <ConfigProvider use-id=fn<use-id> dir=undefined locale=undefined > 
+  at <App > 
+  at <App key=4 > 
+  at <NuxtRoot>
+runtime-core.esm-bun….js?v=ab7927aa:1678 Hydration completed but contains mismatches.
+runtime-core.esm-bun…er.js?v=ab7927aa:50 [Vue warn]: Hydration children mismatch on 
+ 
+Server rendered element contains fewer child nodes than client vdom. 
+  at <ToastProvider swipe-direction="right" duration=5000 > 
+  at <Toaster key=0 > 
+  at <TooltipProvider > 
+  at <ConfigProvider use-id=fn<use-id> dir=undefined locale=undefined > 
+  at <App > 
+  at <App key=4 > 
+  at <NuxtRoot>
+runtime-core.esm-bun…er.js?v=ab7927aa:50 [Vue warn]: Hydration class mismatch on 
+ 
+  - rendered on server: class="fixed inset-0 flex overflow-hidden"
+  - expected on client: class="flex flex-col items-center justify-center h-screen gap-4"
+  Note: this mismatch is check-only. The DOM will not be rectified in production due to performance overhead.
+  You should fix the source of the mismatch. 
+  at <ToastProvider swipe-direction="right" duration=5000 > 
+  at <Toaster key=0 > 
+  at <TooltipProvider > 
+  at <ConfigProvider use-id=fn<use-id> dir=undefined locale=undefined > 
+  at <App > 
+  at <App key=4 > 
+  at <NuxtRoot>
+
+  Error with Permissions-Policy header: Unrecognized feature: 'browsing-topics'.
+Error with Permissions-Policy header: Unrecognized feature: 'interest-cohort'.
+```
