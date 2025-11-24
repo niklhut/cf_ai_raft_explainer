@@ -1,8 +1,7 @@
-import { OpenAPIRoute } from "chanfana";
-import { z } from "zod";
-import { HTTPException } from "hono/http-exception";
-import type { AppContext } from "../types";
-import { verifyTurnstileToken } from "../utils/turnstile";
+import { OpenAPIRoute } from "chanfana"
+import { z } from "zod"
+import type { AppContext } from "../types"
+import { requireTurnstile } from "../utils/turnstile"
 
 export class ChatNew extends OpenAPIRoute {
   schema = {
@@ -20,22 +19,12 @@ export class ChatNew extends OpenAPIRoute {
         },
       },
     },
-  };
+  }
 
   async handle(c: AppContext) {
-    const token = c.req.header('X-Turnstile-Token');
-    if (!token) {
-      throw new HTTPException(401, { message: "Missing Turnstile token" });
-    }
+    await requireTurnstile(c)
 
-    const ip = c.req.header('CF-Connecting-IP');
-    const isValid = await verifyTurnstileToken(token, c.env, ip);
-
-    if (!isValid) {
-      throw new HTTPException(403, { message: "Invalid Turnstile token" });
-    }
-
-    const id = c.env.RAFT_CLUSTER.newUniqueId();
-    return c.json({ sessionId: id.toString() });
+    const id = c.env.RAFT_CLUSTER.newUniqueId()
+    return c.json({ sessionId: id.toString() })
   }
 }

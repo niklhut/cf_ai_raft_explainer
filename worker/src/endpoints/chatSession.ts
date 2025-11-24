@@ -11,8 +11,8 @@ import {
   streamText,
   tool,
   UIMessage,
-  UIMessageChunk,
 } from "ai"
+import { requireTurnstile } from "../utils/turnstile"
 
 export class ChatSession extends OpenAPIRoute {
   schema = {
@@ -64,6 +64,8 @@ export class ChatSession extends OpenAPIRoute {
   }
 
   async handle(c: AppContext) {
+    await requireTurnstile(c)
+
     const data = await this.getValidatedData<typeof this.schema>()
     const { sessionId } = data.params
     const { messages, model: modelId } = data.body

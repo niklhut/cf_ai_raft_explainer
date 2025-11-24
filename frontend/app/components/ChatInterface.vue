@@ -24,20 +24,8 @@ watch(() => clusterState.value?.id, (sessionId) => {
 
   if (sessionId === activeSessionId.value && chat.value) return
 
-  const transport = new DefaultChatTransport({
-    api: `${config.public.apiBase}/chat/${sessionId}`,
-    fetch: (input, init) => {
-      if (init && init.method === "POST" && init.body) {
-        const body = JSON.parse(init.body as string)
-        body.model = model.value
-        init.body = JSON.stringify(body)
-      }
-      return fetch(input, init)
-    }
-  })
-
   chat.value = new Chat({
-    transport,
+    transport: useChatTransport(sessionId),
     messages: clusterState.value?.chatHistory ?? [],
   })
 

@@ -1,6 +1,7 @@
 import { OpenAPIRoute } from "chanfana"
 import { z } from "zod"
 import type { AppContext } from "../types"
+import { requireTurnstile } from "../utils/turnstile"
 
 export class WebsocketSession extends OpenAPIRoute {
   schema = {
@@ -24,6 +25,8 @@ export class WebsocketSession extends OpenAPIRoute {
   }
 
   async handle(c: AppContext) {
+    await requireTurnstile(c)
+
     const data = await this.getValidatedData<typeof this.schema>()
     const sessionId = data.params.sessionId
     const upgradeHeader = data.headers.Upgrade?.toLowerCase()

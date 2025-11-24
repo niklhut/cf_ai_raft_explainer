@@ -1,6 +1,7 @@
 import { OpenAPIRoute } from "chanfana"
 import { z } from "zod"
 import type { AppContext } from "../types"
+import { requireTurnstile } from "../utils/turnstile"
 
 export class GetModels extends OpenAPIRoute {
   schema = {
@@ -26,6 +27,8 @@ export class GetModels extends OpenAPIRoute {
   }
 
   async handle(c: AppContext) {
+    await requireTurnstile(c)
+
     const models = [
       {
         id: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",

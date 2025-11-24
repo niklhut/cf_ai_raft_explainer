@@ -1,6 +1,7 @@
-import { OpenAPIRoute } from "chanfana";
-import { z } from "zod";
-import type { AppContext } from "../types";
+import { OpenAPIRoute } from "chanfana"
+import { z } from "zod"
+import type { AppContext } from "../types"
+import { requireTurnstile } from "../utils/turnstile"
 
 export class StateSession extends OpenAPIRoute {
   schema = {
@@ -21,16 +22,18 @@ export class StateSession extends OpenAPIRoute {
         },
       },
     },
-  };
+  }
 
   async handle(c: AppContext) {
+    await requireTurnstile(c)
+
     const data = await this.getValidatedData<typeof this.schema>()
 
-    const id = c.env.RAFT_CLUSTER.idFromString(data.params.sessionId);
-    const stub = c.env.RAFT_CLUSTER.get(id);
+    const id = c.env.RAFT_CLUSTER.idFromString(data.params.sessionId)
+    const stub = c.env.RAFT_CLUSTER.get(id)
 
-    const doResponse = await stub.fetch("https://dummy/getState");
-    const responseData = await doResponse.json();
-    return c.json(responseData);
+    const doResponse = await stub.fetch("https://dummy/getState")
+    const responseData = await doResponse.json()
+    return c.json(responseData)
   }
 }
