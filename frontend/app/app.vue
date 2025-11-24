@@ -6,7 +6,7 @@ const tokenCookie = useCookie('turnstile_token', {
 </script>
 
 <template>
-  <UApp>
+  <UApp :toaster="{ position: 'top-right' }">
     <NuxtLoadingIndicator />
 
     <ClientOnly>

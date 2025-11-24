@@ -12,6 +12,8 @@ const input = ref("")
 const chat = shallowRef<Chat<UIMessage> | null>(null)
 const activeSessionId = ref<string | null>(null)
 
+const toast = useToast()
+
 watch(() => clusterState.value?.id, (sessionId) => {
   if (!sessionId) {
     chat.value = null
@@ -24,6 +26,12 @@ watch(() => clusterState.value?.id, (sessionId) => {
   chat.value = new Chat({
     transport: useChatTransport(sessionId),
     messages: clusterState.value?.chatHistory ?? [],
+    onError(error) {
+      toast.add({
+        title: "Failed to send message.",
+        color: "error",
+      })
+    }
   })
 
   activeSessionId.value = sessionId
@@ -43,6 +51,11 @@ const onSubmit = () => {
     text: trimmed,
   })
   input.value = ""
+}
+
+const onReload = () => {
+  if (!chat.value) return
+  chat.value.regenerate()
 }
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
@@ -90,7 +103,7 @@ async function createChat(prompt: string) {
             @click="createChat(quickChat.label)" />
         </div>
         <UChatPrompt v-model="input" placeholder="Type a command (e.g., 'fail leader')..." @submit="onSubmit">
-          <UChatPromptSubmit v-if="chat" :status="chat.status" @stop="chat.stop" />
+          <UChatPromptSubmit v-if="chat" :status="chat.status" @stop="chat.stop" @reload="onReload" />
           <template #footer>
             <ModelSelect />
           </template>
