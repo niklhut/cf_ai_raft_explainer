@@ -54,8 +54,7 @@ const isMobile = breakpoints.smaller('lg')
 
             <template #body>
                 <div v-if="clusterState">
-                    <h2 class="text-xl font-bold mb-4">Cluster Visualization (Term: {{clusterState.nodes.find(n =>
-                        n.role === 'leader')?.term}})</h2>
+                    <h2 class="text-xl font-bold mb-4">Cluster Visualization</h2>
                     <NodeVisualization :nodes="clusterState.nodes" />
 
                     <div class="mt-8">
