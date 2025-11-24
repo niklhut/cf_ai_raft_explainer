@@ -1,18 +1,23 @@
 name: Deploy Frontend
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - 'frontend/**'
-      - 'shared/**'
-      - '.github/workflows/deploy-frontend.yml'
+      - "frontend/**"
+      - "shared/**"
+      - ".github/workflows/deploy-frontend.yml"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy to Cloudflare Pages
+    permissions:
+      contents: read
+      deployments: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -24,7 +29,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
