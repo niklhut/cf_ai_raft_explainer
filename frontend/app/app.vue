@@ -1,9 +1,7 @@
 <script setup lang="ts">
-const tokenCookie = useCookie('turnstile_token')
-const token = ref<string | undefined>(tokenCookie.value || undefined)
-
-watch(token, (newToken) => {
-  tokenCookie.value = newToken
+const tokenCookie = useCookie('turnstile_token', {
+  default: () => undefined as string | undefined,
+  watch: true
 })
 </script>
 
@@ -12,10 +10,10 @@ watch(token, (newToken) => {
     <NuxtLoadingIndicator />
 
     <ClientOnly>
-      <div v-if="!token" class="flex flex-col items-center justify-center h-screen gap-4">
+      <div v-if="!tokenCookie" class="flex flex-col items-center justify-center h-screen gap-4">
         <h1 class="text-2xl font-bold">Security Check</h1>
         <p>Please complete the security check to access the application.</p>
-        <NuxtTurnstile v-model="token" />
+        <NuxtTurnstile v-model="tokenCookie" />
       </div>
 
       <NuxtPage v-else />
