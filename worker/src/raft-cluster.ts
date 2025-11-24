@@ -152,7 +152,6 @@ export class RaftCluster {
     const leader = this.clusterState.nodes.find((n) => n.role === "leader")
     if (leader) {
       leader.role = "dead"
-      console.log(this.clusterState)
       await this.state.storage.put("clusterState", this.clusterState)
       this.broadcastState()
 
@@ -255,7 +254,6 @@ export class RaftCluster {
         }
       })
       newLeader.role = "leader"
-      console.log(aliveNodes)
       await this.state.storage.put("clusterState", this.clusterState)
       this.broadcastState()
     }

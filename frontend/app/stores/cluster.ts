@@ -86,7 +86,6 @@ export const useClusterStore = defineStore("cluster", () => {
   const initActiveSession = async () => {
     if (sessionStore.sessionId) {
       await fetchState()
-      console.log("Loaded messages for session", sessionStore.sessionId, clusterState.value?.chatHistory)
       closeWebSocket()
       connectWebSocket()
     }

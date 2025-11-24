@@ -15,7 +15,6 @@ export const useModels = () => {
       const { get } = useApi()
       const res = (await get("/models")) as { models: Model[] }
       models.value = res.models
-      console.log("Fetched models:", models.value)
 
       // If current model is not in list (and list is not empty), switch to first available
       if (

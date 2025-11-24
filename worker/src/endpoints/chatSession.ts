@@ -86,6 +86,9 @@ export class ChatSession extends OpenAPIRoute {
       }
       const google = createGoogleGenerativeAI({ apiKey })
       model = google(modelId)
+    } else if (modelId && modelId.startsWith("@cf")) {
+      const workersai = createWorkersAI({ binding: c.env.AI })
+      model = workersai(modelId as any)
     } else {
       const workersai = createWorkersAI({ binding: c.env.AI })
       model = workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast" as any)
@@ -175,17 +178,7 @@ Current Raft Cluster State: ${JSON.stringify(filteredOldState)}
         changeClusterState: changeClusterStateTool,
       },
       stopWhen: stepCountIs(5),
-      onChunk: async ({ chunk }) => {
-        console.log("Chunk:", chunk)
-        if (chunk.type === "text-delta") {
-          const assistantMessage = {
-            id: chunk.id,
-            text: chunk.text,
-          }
-        }
-      },
-      onFinish: async ({ text, toolCalls, toolResults }) => {
-        console.log("Finished", text, toolCalls, toolResults)
+      onFinish: async ({ text }) => {
         const assistantMessage: UIMessage = {
           id: generateId(),
           role: "assistant",
