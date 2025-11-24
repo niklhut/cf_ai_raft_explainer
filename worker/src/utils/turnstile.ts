@@ -38,7 +38,7 @@ export async function requireTurnstile(c: AppContext): Promise<void> {
   }
 
   const secretKey = c.env.TURNSTILE_SECRET_KEY
-  const remoteIp = c.req.header("CF-Connecting-IP")
+  const remoteIp = c.req.header("CF-Connecting-IP") || ""
   const validationResult = await verifyTurnstile(token, secretKey, remoteIp)
 
   if (!validationResult.success) {

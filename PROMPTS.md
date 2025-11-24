@@ -1369,3 +1369,10 @@ Error: Multiple versions of pnpm specified:
     - version pnpm@10.23.0+sha512.21c4e5698002ade97e4efe8b8b4a89a8de3c85a37919f957e7a0f30f38fbc5bbdd05980ffe29179b2fb6e6e691242e098d945d1601772cad0fef5fb6411e2a4b in the package.json with the key "packageManager"
   Remove one of these versions to avoid version mismatch errors like ERR_PNPM_BAD_PM_VERSION
 ```
+
+New chat:
+
+```md
+When i deploy this, I get the error turnstile verification failed on the worker routes. Why? How can we fix this? 
+Also the cloudflare/pages-action@v1 action is deprecated and should be switched to the wrangler-action, adjust this please
+```
