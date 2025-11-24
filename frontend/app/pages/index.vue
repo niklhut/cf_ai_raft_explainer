@@ -1,8 +1,11 @@
 <script setup lang="ts">
 const sessionStore = useSessionStore()
 const { createSession } = sessionStore
-const { savedSessions, sessionId } = storeToRefs(sessionStore)
+const { savedSessions } = storeToRefs(sessionStore)
 const router = useRouter()
+
+const config = useRuntimeConfig()
+console.log("Turnstile Site Key:", config.public.turnstile.siteKey)
 
 onMounted(async () => {
     if (savedSessions.value.length > 0) {
