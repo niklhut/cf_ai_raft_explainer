@@ -1388,3 +1388,147 @@ Follow up:
 ```md
 Thanks but the auth header does not work with the web socket endpoint connection
 ```
+
+New chat:
+
+```md
+I am building a Raft explainer AI with this chat handler and system prompt using the vercel ai SDK
+
+    const changeClusterStateTool = tool({
+      description:
+        "A tool used to simulate an event or command in the Raft cluster, such as failing a node, recovering a node, or setting a key/value. Use this tool when the user requests an action that changes the cluster state.",
+      inputSchema: z.object({
+        command: z.object({
+          type: z
+            .enum(["FAIL_LEADER", "FAIL_NODE", "RECOVER_NODE", "SET_KEY"])
+            .describe(
+              "The specific type of Raft simulation command to execute.",
+            ),
+          nodeId: z
+            .number()
+            .optional()
+            .describe(
+              "The ID of the node (e.g., 1, 2, 3) to target. Required for FAIL_NODE and RECOVER_NODE.",
+            ),
+          key: z
+            .string()
+            .optional()
+            .describe("The key name for SET_KEY commands."),
+          value: z
+            .string()
+            .optional()
+            .describe(
+              "The value to associate with the key for SET_KEY commands, empty if key should be deleted.",
+            ),
+        }),
+      }),
+      execute: async ({ command }) => {
+        console.log("Executing command via tool:", command)
+        const res = await stub.fetch("https://dummy/execute", {
+          method: "POST",
+          body: JSON.stringify({ command }),
+        })
+        const newState = (await res.json()) as RaftClusterState
+        return this.filterState(newState, true)
+      },
+    })
+
+    const result = streamText({
+      model,
+      abortSignal: c.req.raw.signal,
+      system: `
+You are the **Raft Consensus Algorithm Simulator Narrator and Expert Tutor**. Your primary goal is to guide the user through Raft concepts by simulating and explaining state changes in the cluster.
+
+### Your Core Task
+Your task is to be an **educational narrator**. When a user requests an action (e.g., "fail a node"), a tool will run to simulate that change. You will receive the *new* cluster state from that tool's output.
+
+You MUST NOT just output the new state or any raw JSON.
+
+Instead, your job is to generate a **conversational narrative** that explains **what just happened and why**. You must compare the *old state* (provided below) to the *new state* (from the tool output) and explain the transition using Raft principles.
+
+### CURRENT Raft Cluster State (Before This Turn)
+${JSON.stringify(filteredOldState)}
+
+---
+
+### Your Response Requirements (Mandatory)
+
+When a tool has been used and the state has changed, your narrative response **MUST** follow this 3-part structure:
+
+1.  **The Action:** Start by confirming what the user requested (e.g., "You asked to set the key 'x' to 10..." or "We just simulated a failure on node 2...").
+2.  **The Result:** Clearly state the *specific changes* that happened in the cluster (e.g., "As a result, Node 1 is now the leader," "The key 'x' has been updated," "Node 2 is now marked as 'Failed'").
+3.  **The Raft Principle:** This is the most important part. Explain the **"why"** using the underlying Raft mechanism. (e.g., "This happened because the leader successfully replicated the log entry to a majority of nodes..." or "This failure triggered a new election because the followers' election timers expired...").
+
+---
+
+### 🌟 Example of a GOOD Response
+
+Here is an example of the perfect response format.
+
+**User Request:** "Store value 10 for the key x."
+
+**(Tool runs and returns the new state where x=10)**
+
+**Your Correct Narrative Response:**
+"Alright, we've processed your request to set the key 'x' to '10'.
+
+This operation was successful, and the key 'x' is now stored with the value '10' in our cluster's key-value store.
+
+In Raft, this works because the leader first added this 'set' command to its own log. It then sent this new log entry to all its followers. Once a *majority* of nodes (e.g., 3 out of 5) confirmed they had received it, the leader 'committed' the entry and applied it to its state machine (updating 'x'). This commitment is what makes the change durable, and all followers will eventually apply it to their own state machines as well."
+
+---
+
+### Other Instructions
+
+* **No Tool Use:** If the user just asks a question (e.g., "What is a leader?"), do *not* use a tool. Just answer the question educationally.
+* **Tool Use:** Use the \`changeClusterState\` tool *only* when the user explicitly requests an action that changes the cluster state.
+* **No Change/Error:** If the tool runs but no significant state changes (or an error occurs), explain *why* based on Raft rules (e.g., "The command was ignored because Node 2 was already in a 'Failed' state.").`,
+      messages: convertToModelMessages(messages as UIMessage[]),
+      tools: {
+        changeClusterState: changeClusterStateTool,
+      },
+      stopWhen: stepCountIs(5),
+      onFinish: async ({ text }) => {
+        const assistantMessage: UIMessage = {
+          id: generateId(),
+          role: "assistant",
+          parts: [{ type: "text", text }],
+        }
+
+        await stub.fetch("https://dummy/addHistory", {
+          method: "POST",
+          body: JSON.stringify({ messages: [assistantMessage] }),
+          headers: { "Content-Type": "application/json" },
+        })
+      },
+    })
+
+
+I use the llama-3.3-70b-instruct-fp8-fast model via cloudflare as well as gemini 2.5 flash and flash lite via google api. However, when I ask "What happens if the leader fails?" Llama responds very concise after simulating the event, without much details about the Raft algorithm:
+
+When the leader fails, the other nodes in the cluster will detect the failure and initiate a new leader election. A new leader will be elected, and the cluster will continue to function normally. The failed leader will be marked as "dead" and will not participate in the cluster until it is recovered.
+
+Gemini 2.5 flash responds better with details about raft but does not simulate the event using the tool
+
+If the leader node fails in a Raft cluster, a new election is triggered to choose a new leader. Here's a breakdown of what happens:
+Follower Timeouts: When the leader fails, it stops sending AppendEntries heartbeats to its followers.
+Election Timeout: Each follower has an election timeout. If a follower doesn't receive heartbeats (or log entries) from the leader within this randomized timeout period, it assumes the leader has failed.
+Become Candidate: The follower then transitions to the Candidate state, increments its current term, and sends RequestVote RPCs to all other nodes in the cluster.
+Voting: Other nodes, upon receiving a RequestVote RPC, will vote for the candidate if certain conditions are met (e.g., they haven't voted for another candidate in the current term, and the candidate's log is at least as up-to-date as their own).
+New Leader:
+If a candidate receives votes from a majority of the nodes, it becomes the new Leader. It then starts sending AppendEntries heartbeats to all followers to establish its authority.
+If a candidate doesn't receive a majority, its election timeout might expire again, or it might discover another node has become leader (if it receives AppendEntries from a new leader with a higher term), in which case it reverts to being a Follower.
+This process ensures that the Raft cluster can continue to operate and maintain consensus even if the leader node becomes unavailable.
+
+And 2.5 flash lite sometimes simulates it but usually only explains and asks if i would like to simulate:
+
+When the leader fails in a Raft cluster, the system is designed to elect a new leader to ensure continued operation. Here's a breakdown of what typically occurs:
+Detection of Failure: The follower nodes, which have timers to expect heartbeats from the leader, will eventually time out if they stop receiving them. This timeout triggers them to transition from the 'follower' state to the 'candidate' state.
+New Election: Each follower node that becomes a candidate starts an election. They increment their term and send 'RequestVote' RPCs to other nodes in the cluster.
+Voting: Nodes that have not yet voted in this term will vote for a candidate. A node will vote for a candidate if that candidate's log is at least as up-to-date as its own.
+Elected Leader: The first candidate to receive a vote from a majority of the nodes in the cluster becomes the new leader for that term.
+Normal Operation Resumes: The new leader then begins sending heartbeats to the other nodes (now followers) to establish its authority and resume normal cluster operations, such as processing client requests.
+If you'd like, we can simulate this scenario! Just let me know.
+
+How can we improve the system prompt so that the gemini models also use the tool to simulate the action even when a hypothetical is asked, "what would happen if the leader fails again", "Could we still store a value" (In this case the model should also pick a key and value it likes for the tool call, if not specified) and so on, and maybe get a better explanation from llama, but I guess it is an older model so it might not be possible 
+```
