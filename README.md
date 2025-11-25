@@ -6,7 +6,7 @@ Try it it out here: [https://raft.niklhut.com](https://raft.niklhut.com)
 
 > **Model Notes**:
 >
-> The application supports Llama 3.3 (running on Cloudflare Workers AI), Google Gemini 2.5 Flash, and Gemini 2.5 Flash-Lite models. For the best and most consistent experience in interpreting user commands and giving explanations, I recommend using Gemini 2.5 Flash Lite. For more details, see [Model Notes](#model-notes) section below.
+> The application supports Llama 3.3 (running on Cloudflare Workers AI), Google Gemini 2.5 Flash, and Gemini 2.5 Flash Lite models. For the best and most consistent experience in interpreting user commands and giving explanations, I recommend using Gemini 2.5 Flash Lite. For more details, see [Model Notes](#model-notes) section below.
 
 ![Project Screenshot](./images/screenshot.png)
 
@@ -48,7 +48,7 @@ The application supports multiple AI models: Llama 3.3 (running on Cloudflare Wo
 
 ## Local Development
 
-1. In the `worker` directory, create a `.env` file based on `.env.example` and set `TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA` to bypass Turnstile in development. If you want to use Google Gemini models, set `GOOGLE_GENERATIVE_AI_API_KEY` with your API key from Google AI Studio (https://aistudio.google.com) It currently offers free access with usage limits to the Gemini 2.5 Flash and Flash-Lite models used by this project.
+1. In the `worker` directory, create a `.env` file based on `.env.example` and set `TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA` to bypass Turnstile in development. If you want to use Google Gemini models, set `GOOGLE_GENERATIVE_AI_API_KEY` with your API key from Google AI Studio (https://aistudio.google.com). It currently offers free access with usage limits to the Gemini 2.5 Flash and Flash-Lite models used by this project.
 2. Install dependencies:
     ```bash
     pnpm install
