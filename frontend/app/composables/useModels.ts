@@ -6,7 +6,7 @@ export interface Model {
 export const useModels = () => {
   const model = useState<string>(
     "chat-model",
-    () => "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    () => "gemini-2.5-flash-lite",
   )
   const models = useState<Model[]>("chat-models", () => [])
 
