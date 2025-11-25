@@ -1532,3 +1532,9 @@ If you'd like, we can simulate this scenario! Just let me know.
 
 How can we improve the system prompt so that the gemini models also use the tool to simulate the action even when a hypothetical is asked, "what would happen if the leader fails again", "Could we still store a value" (In this case the model should also pick a key and value it likes for the tool call, if not specified) and so on, and maybe get a better explanation from llama, but I guess it is an older model so it might not be possible 
 ```
+
+New chat:
+
+```md
+When I write a Readme for this project since it is part of my application to the Cloudflare SWE Internship, what should I pay attention to and focus on? Which tech decisions are relevant?
+```
