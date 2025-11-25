@@ -10,11 +10,11 @@ const tokenCookie = useCookie('turnstile_token', {
     <NuxtLoadingIndicator />
 
     <ClientOnly>
-      <div v-if="!tokenCookie" class="flex flex-col items-center justify-center h-screen gap-4">
+      <UContainer v-if="!tokenCookie" class="flex flex-col items-center justify-center h-screen gap-4">
         <h1 class="text-2xl font-bold">Security Check</h1>
-        <p>Please complete the security check to access the application.</p>
-        <NuxtTurnstile v-model="tokenCookie" />
-      </div>
+        <p class="text-center">Please complete the security check to access the application.</p>
+        <NuxtTurnstile v-model="tokenCookie" class="pt-2"/>
+      </UContainer>
 
       <NuxtPage v-else />
 
